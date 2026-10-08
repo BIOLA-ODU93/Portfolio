@@ -1,0 +1,12 @@
+---
+/** Section marker: "● —— 02  The journey" */
+import { pad } from '../lib/format';
+interface Props { n: number; label: string }
+const { n, label } = Astro.props;
+---
+<p class="chapter label" data-reveal>
+  <span class="chapter__pin" aria-hidden="true"></span>
+  <span>{pad(n)}</span>
+  <span class="chapter__rule" aria-hidden="true"></span>
+  <span>{label}</span>
+</p>

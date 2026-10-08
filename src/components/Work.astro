@@ -1,0 +1,142 @@
+---
+import { work, categories } from '../content/site';
+import { rich, pad } from '../lib/format';
+import Chapter from './Chapter.astro';
+import ProjectCase from './ProjectCase.astro';
+import Arrow from './Arrow.astro';
+
+// Projects grouped in journey order: graphics → identity → UI.
+const groups = categories
+  .map((c) => ({ ...c, projects: work.projects.filter((p) => p.category === c.id) }))
+  .filter((g) => g.projects.length > 0);
+const ordered = groups.flatMap((g) => g.projects);
+---
+
+<section id="work" class="section work grain" data-theme="ink" data-chapter="3" data-chapter-label="Selected work" aria-labelledby="work-title">
+  <div class="wrap">
+    <div class="work__intro grid">
+      <div class="work__heading">
+        <Chapter n={3} label="Selected work" />
+        <h2 id="work-title" class="h-section" data-reveal set:html={rich(work.title)} />
+      </div>
+      <p class="lede muted work__lede" data-reveal style="--d:1" set:html={rich(work.intro)} />
+    </div>
+
+    <!-- Index: a quick, scannable list that jumps to each case study -->
+    <nav class="index" aria-label="Project index">
+      <p class="index__head label muted" aria-hidden="true">
+        <span>No.</span><span>Project</span><span>Discipline</span><span>Year</span>
+      </p>
+      <ol>
+        {
+          ordered.map((p, i) => (
+            <li data-reveal style={`--d:${i % 6}`}>
+              <a class="index__row" href={`#${p.slug}`}>
+                <span class="label index__n">{pad(i + 1)}</span>
+                <span class="index__name" set:html={rich(p.name)} />
+                <span class="label muted index__disc">{p.discipline}</span>
+                <span class="label index__year" set:html={rich(p.year)} />
+                <span class="index__arrow" aria-hidden="true"><Arrow dir="down" /></span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <div class="cases">
+      {
+        groups.map((g, gi) => (
+          <div class="group" id={`work-${g.id}`}>
+            <h3 class="group__title label">
+              <span class="group__n">{pad(gi + 1)}</span>
+              <span class="group__rule" aria-hidden="true" />
+              <span>{g.label}</span>
+              <span class="muted">({g.projects.length})</span>
+            </h3>
+            {g.projects.map((p) => (
+              <ProjectCase project={p} index={ordered.indexOf(p)} total={ordered.length} />
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .work__intro { row-gap: 32px; align-items: end; }
+  .work__heading { grid-column: 1 / -1; }
+  .work__lede { grid-column: 1 / -1; }
+  @media (min-width: 960px) {
+    .work__heading { grid-column: 1 / span 7; }
+    .work__lede { grid-column: 9 / -1; }
+  }
+
+  .index { margin-top: clamp(56px, 8vw, 120px); }
+  .index__head,
+  .index__row {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    align-items: baseline;
+    gap: var(--gutter);
+  }
+  .index__head {
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .index__head span:nth-child(3),
+  .index__disc,
+  .index__arrow { display: none; }
+  .index li { border-bottom: 1px solid var(--line); }
+  .index__row {
+    position: relative;
+    padding-block: clamp(16px, 2.2vw, 28px);
+    transition: padding 0.5s var(--ease-out), color 0.3s;
+  }
+  .index__n { color: var(--accent-text); }
+  .index__name {
+    font-family: var(--font-display);
+    font-size: var(--type-h3);
+    line-height: 1;
+    letter-spacing: -0.015em;
+    transition: transform 0.5s var(--ease-out);
+  }
+  .index__row::after {
+    /* signal wash that sweeps in on hover */
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--pin) 10%, transparent);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.5s var(--ease-out);
+  }
+  .index li { position: relative; isolation: isolate; }
+  .index__row:hover::after,
+  .index__row:focus-visible::after { transform: scaleY(1); }
+  .index__row:hover .index__name,
+  .index__row:focus-visible .index__name { transform: translateX(16px); font-style: italic; }
+  .index__arrow :global(svg) { width: 18px; height: 18px; }
+
+  @media (min-width: 760px) {
+    .index__head,
+    .index__row { grid-template-columns: 4rem 1fr 12rem 6rem 2rem; }
+    .index__head span:nth-child(3),
+    .index__disc,
+    .index__arrow { display: block; }
+    .index__head span:nth-child(4) { grid-column: 4; }
+  }
+
+  .cases { margin-top: clamp(40px, 6vw, 80px); }
+  .group { padding-top: clamp(64px, 9vw, 140px); }
+  .group__title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 20px;
+  }
+  .group__n { color: var(--accent-text); }
+  .group__rule { width: 48px; height: 1px; background: var(--line); }
+</style>

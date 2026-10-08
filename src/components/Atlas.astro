@@ -1,0 +1,719 @@
+---
+/**
+ * 01 · The atlas — a scroll-driven map.
+ *
+ * A 2400 × 1600 "world" sits on a tilted 3D plane. Scrolling moves a camera
+ * from the overview to each location in turn (About → Graphics → Identity → UI).
+ * Each district is built from standing "props" — posters, marks, screens —
+ * and every project in that category takes one prop slot (showing its first
+ * image, if it has one) with a pin that links to its case study.
+ *
+ * Copy lives in src/content/site.ts (`atlas`). Positions & art live here.
+ */
+import { atlas, about, work, type Category } from '../content/site';
+import { rich, plain, pad } from '../lib/format';
+import Arrow from './Arrow.astro';
+
+type Kind = 'portrait' | 'stat' | 'poster' | 'mark' | 'browser' | 'phone' | 'card';
+type Prop = { kind: Kind; dx: number; dy: number; w: number; h: number; r?: number; slot?: boolean; v?: number; text?: string };
+type District = {
+  x: number; y: number;
+  plate: { shape: 'circle' | 'rect'; w: number; h: number };
+  ground: string;       // big label painted on the ground
+  labelDy: number;      // where that label sits (south of the district)
+  pinLift: number;      // how high the main pin floats
+  props: Prop[];
+  flats?: { dx: number; dy: number; w: number; h: number; r: number }[];
+};
+
+const districts: Record<string, District> = {
+  about: {
+    x: 560, y: 1080, ground: 'About', labelDy: 330, pinLift: 300,
+    plate: { shape: 'circle', w: 560, h: 560 },
+    props: [
+      { kind: 'stat', dx: -190, dy: 70, w: 120, h: 150, r: 20, text: '05' },
+      { kind: 'portrait', dx: 0, dy: 10, w: 190, h: 250 },
+      { kind: 'stat', dx: 195, dy: 90, w: 120, h: 120, r: -18, text: 'B·G·UI', v: 2 },
+    ],
+    flats: [
+      { dx: -70, dy: 170, w: 90, h: 120, r: -14 },
+      { dx: 60, dy: 190, w: 110, h: 70, r: 10 },
+    ],
+  },
+  graphics: {
+    x: 980, y: 520, ground: 'Graphic works', labelDy: 300, pinLift: 310,
+    plate: { shape: 'rect', w: 680, h: 440 },
+    props: [
+      { kind: 'poster', dx: -210, dy: -70, w: 150, h: 210, r: 14, slot: true, v: 1 },
+      { kind: 'poster', dx: 0, dy: -120, w: 170, h: 240, r: 0, slot: true, v: 2 },
+      { kind: 'poster', dx: 215, dy: -50, w: 140, h: 200, r: -14, slot: true, v: 3 },
+      { kind: 'poster', dx: -100, dy: 110, w: 130, h: 180, r: 8, slot: true, v: 4 },
+      { kind: 'poster', dx: 140, dy: 125, w: 150, h: 150, r: -10, slot: true, v: 5 },
+    ],
+  },
+  identity: {
+    x: 1680, y: 1020, ground: 'Brand identities', labelDy: 330, pinLift: 350,
+    plate: { shape: 'circle', w: 600, h: 600 },
+    props: [
+      { kind: 'mark', dx: -160, dy: -40, w: 160, h: 240, r: 16, slot: true, v: 1 },
+      { kind: 'mark', dx: 70, dy: -110, w: 150, h: 300, r: -4, slot: true, v: 2 },
+      { kind: 'mark', dx: 210, dy: 90, w: 140, h: 180, r: -18, slot: true, v: 3 },
+      { kind: 'mark', dx: -40, dy: 140, w: 120, h: 140, r: 6, slot: true, v: 4 },
+    ],
+    flats: [
+      { dx: -200, dy: 150, w: 110, h: 64, r: -20 },
+      { dx: -190, dy: 160, w: 110, h: 64, r: -8 },
+      { dx: 120, dy: 210, w: 110, h: 64, r: 12 },
+    ],
+  },
+  ui: {
+    x: 1980, y: 440, ground: 'UI & web', labelDy: 310, pinLift: 350,
+    plate: { shape: 'rect', w: 640, h: 460 },
+    props: [
+      { kind: 'browser', dx: -170, dy: -90, w: 260, h: 190, r: 12, slot: true, v: 1 },
+      { kind: 'browser', dx: 140, dy: -140, w: 220, h: 300, r: -8, slot: true, v: 2 },
+      { kind: 'phone', dx: -30, dy: 120, w: 90, h: 180, r: 4, slot: true, v: 1 },
+      { kind: 'browser', dx: -240, dy: 130, w: 190, h: 140, r: 18, slot: true, v: 3 },
+      { kind: 'phone', dx: 200, dy: 120, w: 90, h: 180, r: -12, slot: true, v: 2 },
+    ],
+  },
+};
+
+// Pair each prop slot with a project from that category (in content order).
+const slotted = Object.fromEntries(
+  Object.entries(districts).map(([id, d]) => {
+    const projects = work.projects.filter((p) => p.category === (id as Category));
+    let i = 0;
+    return [id, d.props.map((prop) => ({ ...prop, project: prop.slot ? projects[i++] : undefined }))];
+  }),
+);
+
+// Camera keyframes: overview first, then one per location (same order as content).
+const cameras = [
+  { x: 1300, y: 860, s: 0.4, tilt: 58, rot: -10 },
+  ...atlas.locations.map((loc, i) => {
+    const d = districts[loc.id];
+    const presets = [
+      { s: 1.15, tilt: 50, rot: -6 },
+      { s: 1.12, tilt: 55, rot: -14 },
+      { s: 1.08, tilt: 51, rot: -4 },
+      { s: 1.1, tilt: 56, rot: -12 },
+    ];
+    return { x: d.x, y: d.y + 40, ...presets[i % presets.length] };
+  }),
+];
+
+const road =
+  'M140 1560 C 300 1360, 440 1200, 560 1080 C 700 900, 820 700, 980 520 C 1140 360, 1320 700, 1480 860 C 1560 940, 1600 1000, 1680 1020 C 1820 1060, 1900 760, 1980 440 C 2020 300, 2120 220, 2300 160';
+const lands = [
+  'M120 1400 C 80 1100, 240 860, 420 760 C 560 680, 600 420, 760 300 C 900 200, 1180 220, 1300 340 C 1420 460, 1340 620, 1240 700 C 1120 800, 960 820, 900 960 C 840 1120, 940 1300, 820 1420 C 680 1540, 260 1560, 120 1400 Z',
+  'M1300 1380 C 1240 1220, 1300 1060, 1400 960 C 1500 860, 1560 760, 1640 600 C 1720 420, 1760 220, 1960 180 C 2160 140, 2320 260, 2330 460 C 2340 660, 2180 760, 2080 860 C 1980 960, 2080 1160, 1980 1320 C 1880 1480, 1380 1540, 1300 1380 Z',
+];
+const landCenters = [[700, 900], [1820, 800]];
+const contourScales = [0.86, 0.7, 0.54];
+
+const projectsBy = (id: string) => work.projects.filter((p) => p.category === id);
+---
+
+<section
+  id="atlas"
+  class="atlas"
+  data-theme="ink"
+  data-chapter="1"
+  data-chapter-label="The map"
+  data-atlas
+  data-cameras={JSON.stringify(cameras)}
+  aria-labelledby="atlas-title"
+  style={`--stops:${atlas.locations.length}`}
+>
+  <div class="atlas__stage">
+    <!-- ── The world (decorative; every link in it is also in the cards below) ── -->
+    <div class="atlas__viewport" aria-hidden="true">
+      <div class="world" data-world>
+        <div class="ground"></div>
+
+        <svg class="terrain" viewBox="0 0 2400 1600" width="2400" height="1600">
+          {lands.map((d, i) => (
+            <g>
+              <path class="land" d={d} />
+              {contourScales.map((k) => (
+                <path
+                  class="contour"
+                  d={d}
+                  transform={`translate(${landCenters[i][0]} ${landCenters[i][1]}) scale(${k}) translate(${-landCenters[i][0]} ${-landCenters[i][1]})`}
+                />
+              ))}
+            </g>
+          ))}
+          <path class="road" d={road} />
+          <path class="road-line" d={road} />
+          <path class="road-lit" d={road} pathLength="1" data-road />
+        </svg>
+
+        {
+          atlas.locations.map((loc, li) => {
+            const d = districts[loc.id];
+            return (
+              <div class="district" data-district={loc.id}>
+                <div
+                  class={`plate plate--${d.plate.shape}`}
+                  style={`left:${d.x - d.plate.w / 2}px;top:${d.y - d.plate.h / 2}px;width:${d.plate.w}px;height:${d.plate.h}px`}
+                />
+                <p class="ground-label" style={`left:${d.x}px;top:${d.y + d.labelDy}px`}>{d.ground}</p>
+
+                {d.flats?.map((f) => (
+                  <div class="flat" style={`left:${d.x + f.dx - f.w / 2}px;top:${d.y + f.dy - f.h / 2}px;width:${f.w}px;height:${f.h}px;--r:${f.r}deg`} />
+                ))}
+
+                {slotted[loc.id].map((p) => {
+                  const x = d.x + p.dx;
+                  const y = d.y + p.dy;
+                  const img = p.project?.media?.[0]?.src || (p.kind === 'portrait' ? about.portrait.src : '');
+                  return (
+                    <>
+                      <div class="shadow" style={`left:${x - p.w * 0.65}px;top:${y - p.h * 0.55}px;width:${p.w * 1.3}px;height:${p.h * 0.55}px;--r:${p.r ?? 0}deg`} />
+                      <div class={`prop prop--${p.kind} v${p.v ?? 1}`} style={`left:${x - p.w / 2}px;top:${y - p.h}px;width:${p.w}px;height:${p.h}px;--r:${p.r ?? 0}deg`}>
+                        {img ? (
+                          <img src={img} alt="" loading="lazy" decoding="async" />
+                        ) : p.kind === 'portrait' ? (
+                          <span class="portrait-ph"><i /><b /><em>Your portrait</em></span>
+                        ) : p.kind === 'stat' ? (
+                          <span class="stat">{p.text}</span>
+                        ) : p.kind === 'browser' ? (
+                          <span class="ui"><span class="ui__bar"><i /><i /><i /></span><span class="ui__hero" /><span class="ui__row"><i /><i /><i /></span></span>
+                        ) : p.kind === 'phone' ? (
+                          <span class="ui ui--phone"><span class="ui__notch" /><span class="ui__hero" /><span class="ui__list"><i /><i /><i /></span></span>
+                        ) : p.kind === 'mark' ? (
+                          <span class="mark" />
+                        ) : (
+                          <span class="poster" />
+                        )}
+                      </div>
+                      {p.project && (
+                        <a class="pin pin--project" href={`#${p.project.slug}`} tabindex="-1" style={`--x:${x}px;--y:${y}px;--z:${p.h + 34}px`}>
+                          <span class="pin__dot" />
+                          <span class="pin__label">{plain(p.project.name)}</span>
+                        </a>
+                      )}
+                    </>
+                  );
+                })}
+
+                <span class="pin pin--main" style={`--x:${d.x}px;--y:${d.y}px;--z:${d.pinLift}px`} data-pin={li}>
+                  <span class="pin__dot" />
+                  <span class="pin__label">{pad(li + 1)} · {loc.label}</span>
+                </span>
+              </div>
+            );
+          })
+        }
+      </div>
+    </div>
+
+    <div class="atlas__fog" aria-hidden="true"></div>
+
+    <!-- ── Overview title ── -->
+    <div class="atlas__intro" data-atlas-intro>
+      <p class="label atlas__roles">{atlas.roles}</p>
+      <h2 id="atlas-title" class="atlas__title display">
+        {plain(atlas.title)}
+      </h2>
+      <p class="label muted atlas__count">{pad(atlas.locations.length)} locations</p>
+    </div>
+
+    <a class="atlas__hint label" href="#about" data-atlas-hint>
+      <span class="atlas__hint-ring" aria-hidden="true"><Arrow dir="down" /></span>
+      {atlas.scrollHint}
+    </a>
+
+    <!-- ── Location cards ── -->
+    <ol class="atlas__cards">
+      {
+        atlas.locations.map((loc, i) => {
+          const list = loc.id === 'about' ? [] : projectsBy(loc.id);
+          return (
+            <li class="card" data-card={i} id={`atlas-${loc.id}`}>
+              <p class="label card__kicker">
+                <span class="card__n">{pad(i + 1)}</span>
+                <span class="card__rule" aria-hidden="true" />
+                <span>{loc.kicker}</span>
+              </p>
+              <h2 class="card__title display">{loc.label}</h2>
+              <p class="card__text" set:html={rich(loc.text)} />
+              {list.length > 0 && (
+                <ul class="card__projects" aria-label={`${loc.label} projects`}>
+                  {list.map((p) => (
+                    <li>
+                      <a href={`#${p.slug}`}>
+                        <span set:html={rich(p.name)} />
+                        <span class="label muted" set:html={rich(p.year)} />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <a class="btn card__cta" href={loc.cta.href}>
+                {loc.cta.label} <Arrow dir="down" />
+              </a>
+            </li>
+          );
+        })
+      }
+    </ol>
+
+    <!-- ── Location navigation ── -->
+    <nav class="atlas__nav" aria-label="Map locations">
+      <ol>
+        {
+          atlas.locations.map((loc, i) => (
+            <li>
+              <button type="button" class="label" data-goto={i + 1} aria-controls={`atlas-${loc.id}`}>
+                <span class="atlas__nav-n">{pad(i + 1)}</span>
+                <span class="atlas__nav-label">{loc.label}</span>
+              </button>
+            </li>
+          ))
+        }
+      </ol>
+      <span class="atlas__progress" aria-hidden="true"><span data-atlas-progress></span></span>
+    </nav>
+  </div>
+</section>
+
+<style>
+  /* ── Scroll runway & stage ───────────────────────────── */
+  .atlas {
+    position: relative;
+    background: var(--night);
+    /* one screen for the overview + ~1.1 screens of travel per location */
+    height: calc(100svh + var(--stops) * 110svh);
+  }
+  .atlas__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .atlas__viewport {
+    position: absolute;
+    inset: 0;
+    perspective: 1700px;
+    perspective-origin: var(--ax, 58%) var(--ay, 52%);
+  }
+
+  /* ── World ───────────────────────────────────────────── */
+  .world {
+    position: absolute;
+    left: var(--ax, 58%);
+    top: var(--ay, 52%);
+    width: 2400px;
+    height: 1600px;
+    transform-origin: 0 0;
+    transform-style: preserve-3d;
+    transform: rotateX(54deg) rotateZ(-12deg) scale(0.5) translate(-1280px, -820px);
+    will-change: transform;
+    --tilt: 54deg;
+    --rot: -12deg;
+    --inv: 2;
+  }
+  .world * { transform-style: preserve-3d; }
+  .district { position: absolute; inset: 0; }
+
+  .ground {
+    position: absolute;
+    inset: -800px;
+    background-color: #0e1318;
+    background-image:
+      linear-gradient(rgba(159, 191, 212, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(159, 191, 212, 0.035) 1px, transparent 1px);
+    background-size: 80px 80px;
+    background-position: 800px 800px;
+  }
+  .terrain {
+    position: absolute;
+    inset: 0;
+    width: 2400px;
+    height: 1600px;
+    overflow: visible;
+    transform: translateZ(1px);
+  }
+  .land { fill: #161d24; stroke: rgba(159, 191, 212, 0.16); stroke-width: 2; }
+  .contour { fill: none; stroke: rgba(159, 191, 212, 0.06); stroke-width: 2; }
+  .road { fill: none; stroke: #1f2831; stroke-width: 22; stroke-linecap: round; }
+  .road-line { fill: none; stroke: rgba(232, 236, 238, 0.14); stroke-width: 2; stroke-dasharray: 10 14; }
+  .road-lit {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .plate {
+    position: absolute;
+    border: 1.5px solid rgba(159, 191, 212, 0.22);
+    background: radial-gradient(closest-side, rgba(159, 191, 212, 0.08), rgba(159, 191, 212, 0.02));
+    transform: translateZ(2px);
+  }
+  .plate--circle { border-radius: 50%; }
+  .plate--rect { border-radius: 28px; }
+  .plate::after {
+    content: '';
+    position: absolute;
+    inset: 18px;
+    border: 1px dashed rgba(159, 191, 212, 0.14);
+    border-radius: inherit;
+  }
+
+  .ground-label {
+    position: absolute;
+    margin: 0;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 64px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(232, 236, 238, 0.16);
+    transform: translate(-50%, -50%) translateZ(3px);
+  }
+
+  .flat {
+    position: absolute;
+    background: #c9d5dd;
+    border-radius: 4px;
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45);
+    transform: translateZ(4px) rotate(var(--r));
+  }
+  .flat:nth-of-type(2n) { background: #2a3540; }
+
+  /* Soft contact shadow cast "behind" each standing prop */
+  .shadow {
+    position: absolute;
+    background: radial-gradient(50% 100% at 50% 100%, rgba(0, 0, 0, 0.55), transparent 75%);
+    transform-origin: 50% 100%;
+    transform: translateZ(3px) rotate(var(--r)) skewX(-18deg);
+  }
+
+  /* Standing props: stand up from the ground at their bottom edge */
+  .prop {
+    position: absolute;
+    transform-origin: 50% 100%;
+    transform: translateZ(4px) rotateZ(var(--r)) rotateX(-90deg);
+    background: #202a33;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(232, 236, 238, 0.08);
+  }
+  .prop img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Portrait */
+  .prop--portrait { background: linear-gradient(180deg, #2a3641, #161d24); border-radius: 100px 100px 6px 6px; }
+  .portrait-ph { position: absolute; inset: 0; display: grid; place-items: end center; }
+  .portrait-ph i {
+    position: absolute; top: 26%; left: 50%; width: 34%; aspect-ratio: 1; border-radius: 50%;
+    transform: translateX(-50%); background: #3a4855;
+  }
+  .portrait-ph b {
+    position: absolute; bottom: -10%; left: 50%; width: 78%; height: 42%; border-radius: 50% 50% 0 0;
+    transform: translateX(-50%); background: #3a4855;
+  }
+  .portrait-ph em {
+    position: relative; z-index: 1; margin-bottom: 12px; font: 500 11px/1 var(--font-sans);
+    letter-spacing: 0.16em; text-transform: uppercase; font-style: normal; color: var(--accent);
+  }
+
+  .prop--stat { background: #c9d5dd; display: grid; place-items: center; }
+  .stat { font: 300 44px/1 var(--font-display); color: var(--night); letter-spacing: 0.02em; }
+  .v2 .stat { font-size: 26px; }
+
+  /* Posters — abstract placeholder art (replaced by project images) */
+  .poster { position: absolute; inset: 0; }
+  .v1 .poster { background: radial-gradient(circle at 50% 38%, #0c1014 0 26%, transparent 27%), linear-gradient(#c9d5dd, #aebfcb); }
+  .v2 .poster {
+    background:
+      linear-gradient(transparent 70%, #9fbfd4 70% 72%, transparent 72%),
+      repeating-linear-gradient(transparent 0 14px, rgba(232, 236, 238, 0.12) 14px 15px),
+      #1a232b;
+  }
+  .v2 .poster::after { content: 'G'; position: absolute; left: 14px; top: 6px; font: 300 120px/1 var(--font-display); color: #9fbfd4; }
+  .v3 .poster { background: linear-gradient(160deg, #9fbfd4, #e8ecee 60%); }
+  .v3 .poster::after { content: ''; position: absolute; inset: 22% 18%; border: 2px solid #0c1014; border-radius: 50% 50% 0 0; }
+  .v4 .poster { background: radial-gradient(#0c1014 2px, transparent 2.5px) 0 0 / 16px 16px, #dbe1e5; }
+  .v5 .poster { background: conic-gradient(from 45deg at 50% 50%, #34566e 0 25%, #c9d5dd 0 50%, #1a232b 0 75%, #9fbfd4 0); }
+
+  /* Identity marks */
+  .prop--mark { background: #d9e2e8; }
+  .mark { position: absolute; inset: 0; display: grid; place-items: center; }
+  .mark::before { content: ''; width: 56%; aspect-ratio: 1; }
+  .v1 .mark::before { border-radius: 50%; border: 10px solid #0c1014; }
+  .v2.prop--mark { background: #0f151a; }
+  .v2 .mark::before { background: #9fbfd4; border-radius: 50% 0 50% 0; }
+  .v3 .mark::before { background: linear-gradient(90deg, #0c1014 50%, transparent 50%); border: 3px solid #0c1014; border-radius: 50%; }
+  .v4.prop--mark { background: #34566e; }
+  .v4 .mark::before { border: 3px solid #e8ecee; transform: rotate(45deg); width: 40%; }
+
+  /* Screens */
+  .prop--browser { background: #e3e9ed; border-radius: 8px; }
+  .prop--phone { background: #0f151a; border-radius: 16px; box-shadow: inset 0 0 0 4px #2a3540; }
+  .ui { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8%; padding: 0 8% 8%; }
+  .ui__bar { display: flex; gap: 5px; align-items: center; height: 18px; margin: 0 -9%; padding: 0 10px; background: #c9d5dd; }
+  .ui__bar i { width: 6px; height: 6px; border-radius: 50%; background: #8a9aa6; }
+  .ui__hero { flex: 1.3; border-radius: 4px; background: linear-gradient(120deg, #34566e, #9fbfd4); }
+  .ui__row { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8%; }
+  .ui__row i { border-radius: 3px; background: #c9d5dd; }
+  .v2 .ui__hero { background: #0c1014; }
+  .v3 .ui__hero { background: #9fbfd4; }
+  .ui--phone { padding: 22% 12% 14%; gap: 6%; }
+  .ui__notch { position: absolute; top: 7px; left: 50%; width: 30%; height: 6px; border-radius: 4px; transform: translateX(-50%); background: #2a3540; }
+  .ui--phone .ui__hero { flex: 1; }
+  .ui__list { flex: 1.2; display: grid; gap: 10%; }
+  .ui__list i { border-radius: 3px; background: #2a3540; }
+  .v2 .ui--phone .ui__hero { background: #c9d5dd; }
+
+  /* ── Pins: float above the map and always face the camera ── */
+  .pin {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    transform:
+      translate3d(var(--x), var(--y), var(--z))
+      rotateZ(calc(var(--rot) * -1))
+      rotateX(calc(var(--tilt) * -1))
+      scale(var(--inv));
+    transition: opacity 0.5s var(--ease-out);
+  }
+  .pin__dot {
+    position: absolute;
+    left: -7px;
+    top: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    background: rgba(12, 16, 20, 0.6);
+  }
+  .pin__dot::before,
+  .pin__dot::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: var(--accent);
+    transform: translate(-50%, -50%);
+  }
+  .pin__dot::before { width: 6px; height: 1.5px; }
+  .pin__dot::after { width: 1.5px; height: 6px; }
+  .pin__label {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font: 500 11px/1 var(--font-sans);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+  }
+  .pin--main .pin__dot { width: 18px; height: 18px; left: -9px; top: -9px; background: var(--accent); }
+  .pin--main .pin__dot::before,
+  .pin--main .pin__dot::after { background: var(--night); }
+  .pin--main .pin__label { font-size: 12px; bottom: 18px; }
+  .pin--project { opacity: 0; pointer-events: none; }
+  .pin--project .pin__label { color: var(--muted); font-size: 10px; }
+  .pin--project:hover .pin__label { color: var(--fg); }
+  .pin--project:hover .pin__dot { background: var(--accent); }
+  /* project pins only show at the location you're visiting */
+  :global([data-active-district='graphics']) [data-district='graphics'] .pin--project,
+  :global([data-active-district='identity']) [data-district='identity'] .pin--project,
+  :global([data-active-district='ui']) [data-district='ui'] .pin--project { opacity: 1; pointer-events: auto; }
+
+  /* ── Atmosphere ──────────────────────────────────────── */
+  .atlas__fog {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, var(--night) 0%, rgba(12, 16, 20, 0) 22%),
+      linear-gradient(to top, var(--night) 0%, rgba(12, 16, 20, 0) 30%),
+      radial-gradient(120% 90% at 55% 50%, transparent 45%, rgba(12, 16, 20, 0.85) 100%);
+  }
+  .atlas__stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── Title ───────────────────────────────────────────── */
+  .atlas__intro {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: clamp(12px, 2vh, 24px);
+    padding: var(--gutter);
+    text-align: center;
+    pointer-events: none;
+    /* dims the map behind the name, like fog over the overview */
+    background: radial-gradient(70% 55% at 50% 50%, rgba(12, 16, 20, 0.78), rgba(12, 16, 20, 0.4) 70%, rgba(12, 16, 20, 0.2));
+  }
+  .atlas__title {
+    font-size: var(--type-h2);
+    font-weight: 300;
+    line-height: 1;
+    max-width: 14ch;
+    text-wrap: balance;
+    text-shadow: 0 2px 40px rgba(12, 16, 20, 0.6);
+  }
+  .atlas__roles { color: var(--accent); }
+
+  .atlas__hint {
+    position: absolute;
+    left: var(--gutter);
+    bottom: clamp(20px, 4vh, 40px);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+  }
+  .atlas__hint-ring {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+  }
+  .atlas__hint-ring :global(svg) { width: 12px; height: 12px; }
+
+  /* ── Cards ───────────────────────────────────────────── */
+  .atlas__cards {
+    position: absolute;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: calc(clamp(20px, 4vh, 40px) + 56px);
+    pointer-events: none;
+  }
+  .card {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: min(100%, 430px);
+    display: grid;
+    gap: 14px;
+    padding: clamp(20px, 2.4vw, 32px);
+    background: rgba(12, 16, 20, 0.72);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px);
+    transition: opacity 0.5s var(--ease-out), transform 0.6s var(--ease-out), visibility 0s linear 0.6s;
+  }
+  .card.is-active {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+  .card__kicker { display: flex; align-items: center; gap: 12px; color: var(--muted); }
+  .card__n { color: var(--accent); }
+  .card__rule { width: 28px; height: 1px; background: var(--line); }
+  .card__title { font-size: var(--type-h3); }
+  .card__text { color: var(--muted); font-size: var(--type-small); line-height: 1.55; }
+  .card__projects { border-top: 1px solid var(--line); }
+  .card__projects a {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: var(--fs-1);
+    transition: padding 0.3s var(--ease-out), color 0.3s;
+  }
+  .card__projects a:hover { padding-left: 8px; color: var(--accent); }
+  .card__cta { justify-self: start; margin-top: 6px; }
+
+  /* ── Location nav ────────────────────────────────────── */
+  .atlas__nav {
+    position: absolute;
+    right: var(--gutter);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 16px;
+    padding: 10px 14px;
+    background: rgba(12, 16, 20, 0.6);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+  .atlas__nav ol { display: grid; gap: 4px; }
+  .atlas__nav button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-height: 40px;
+    width: 100%;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+  .atlas__nav button:hover,
+  .atlas__nav button[aria-current='true'] { color: var(--fg); }
+  .atlas__nav-n { order: 2; }
+  .atlas__nav button[aria-current='true'] .atlas__nav-n { color: var(--accent); }
+  .atlas__progress { position: relative; width: 1px; background: var(--line); }
+  .atlas__progress span {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform-origin: top;
+    transform: scaleY(var(--p, 0));
+  }
+
+  /* No JS: show the overview only, as a normal-height section */
+  :global(html:not(.js)) .atlas { height: 100svh; }
+  :global(html:not(.js)) .atlas__cards,
+  :global(html:not(.js)) .atlas__nav { display: none; }
+
+  /* ── Small screens ───────────────────────────────────── */
+  @media (max-width: 760px) {
+    .atlas__viewport { perspective: 1100px; }
+    .atlas__nav {
+      top: auto;
+      right: auto;
+      left: var(--gutter);
+      bottom: clamp(20px, 4vh, 40px);
+      transform: none;
+    }
+    .atlas__nav { padding: 4px; }
+    .atlas__nav ol { display: flex; gap: 2px; }
+    .atlas__nav button { width: auto; min-width: 44px; justify-content: center; }
+    .atlas__nav-label { display: none; }
+    .atlas__progress { display: none; }
+    .atlas__hint { left: auto; right: var(--gutter); }
+    .atlas__hint-ring { display: none; }
+    .card { width: 100%; }
+    .card__projects a { font-size: var(--fs-0); }
+  }
+  @media (max-height: 700px) and (min-width: 761px) {
+    .card__text { display: none; }
+  }
+</style>

@@ -1,0 +1,315 @@
+---
+import { site, contact, chapters } from '../content/site';
+import { pad, plain } from '../lib/format';
+
+
+const email = plain(contact.email);
+const socials = contact.socials.filter((s) => s.href);
+---
+
+<header class="site-header" data-theme="ink" data-header>
+  <div class="site-header__inner">
+    <div class="site-header__left">
+      <button
+        class="menu-btn label"
+        type="button"
+        aria-haspopup="dialog"
+        aria-controls="chapter-menu"
+        aria-expanded="false"
+        data-menu-open
+      >
+        <span class="menu-btn__icon" aria-hidden="true"><i></i><i></i></span>
+        <span>Menu</span>
+      </button>
+      <p class="site-header__chapter label" aria-hidden="true">
+        <span data-current-n>01</span>
+        <span class="site-header__dash"></span>
+        <span data-current-label>Opening</span>
+      </p>
+    </div>
+
+    <a class="wordmark" href="#top">
+      <img class="wordmark__logo" src="/brand/signature.png" alt={`${site.displayName} — back to top`} width="115" height="88" />
+    </a>
+
+    <div class="site-header__right">
+      <a class="label header-cta" href="#atlas">
+        <span class="header-cta__dot" aria-hidden="true"></span>
+        3D Map
+      </a>
+    </div>
+  </div>
+</header>
+
+<dialog id="chapter-menu" class="menu" data-theme="ink" aria-label="Chapters" data-menu>
+  <div class="menu__inner grain">
+    <div class="menu__top">
+      <button class="menu-btn label" type="button" data-menu-close>
+        <span class="menu-btn__icon is-close" aria-hidden="true"><i></i><i></i></span>
+        <span>Close</span>
+      </button>
+      <span class="wordmark__name menu__wordmark" aria-hidden="true">{site.displayName}</span>
+      <span class="label muted menu__count" aria-hidden="true">{pad(chapters.length)} chapters</span>
+    </div>
+
+    <nav class="menu__nav" aria-label="Chapters">
+      <ol>
+        {
+          chapters.map((c, i) => (
+            <li style={`--i:${i}`}>
+              <a href={`#${c.id}`} data-menu-link>
+                <span class="label menu__n">Chapter {pad(i + 1)}</span>
+                <span class="menu__label">{c.label}</span>
+                <span class="label muted menu__note">{c.note}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <div class="menu__foot label">
+      <a class="link-line" href={`mailto:${email}`}>{email}</a>
+      <ul class="menu__socials">
+        {socials.map((s) => (
+          <li><a class="link-line" href={s.href} target="_blank" rel="noopener noreferrer">{s.label}</a></li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .site-header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 50;
+    background: transparent;
+    transition: color 0.4s var(--ease-out), transform 0.5s var(--ease-out);
+  }
+  .site-header::before {
+    /* soft fade so the header stays legible over content */
+    content: '';
+    position: absolute;
+    inset: 0 0 -24px 0;
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 62%, color-mix(in srgb, var(--bg) 60%, transparent) 80%, transparent);
+    pointer-events: none;
+    transition: background 0.4s var(--ease-out);
+  }
+  .site-header__inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: var(--header-h);
+    padding-inline: var(--gutter);
+  }
+  .site-header__left {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  .site-header__chapter {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+  }
+  .site-header__dash {
+    width: 22px;
+    height: 1px;
+    background: currentColor;
+  }
+  @media (min-width: 900px) {
+    .site-header__chapter {
+      display: flex;
+    }
+  }
+  .site-header__right {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+  }
+  .menu-btn__icon {
+    position: relative;
+    width: 22px;
+    height: 10px;
+  }
+  .menu-btn__icon i {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1.5px;
+    background: currentColor;
+    transition: transform 0.4s var(--ease-out), width 0.4s var(--ease-out);
+  }
+  .menu-btn__icon i:first-child { top: 0; }
+  .menu-btn__icon i:last-child { bottom: 0; width: 60%; }
+  .menu-btn:hover .menu-btn__icon i:last-child { width: 100%; }
+  .menu-btn__icon.is-close i { top: 50%; bottom: auto; width: 100%; }
+  .menu-btn__icon.is-close i:first-child { transform: rotate(45deg); }
+  .menu-btn__icon.is-close i:last-child { transform: rotate(-45deg); }
+
+  .wordmark {
+    display: inline-flex;
+    padding: 4px;
+  }
+  .wordmark__logo {
+    width: auto;
+    height: clamp(40px, 4.4vw, 58px);
+    transition: opacity 0.3s;
+  }
+  .wordmark:hover .wordmark__logo { opacity: 0.75; }
+  /* the signature is white — darken it on light sections */
+  [data-theme='paper'] .wordmark__logo,
+  [data-theme='mist'] .wordmark__logo { filter: invert(1) brightness(0.2); }
+  .wordmark__name {
+    font-family: var(--font-display);
+    font-size: var(--fs-1);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .header-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+  }
+  .header-cta__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--pin);
+    transition: transform 0.3s var(--ease-out);
+  }
+  [data-theme='mist'] .header-cta__dot { background: var(--night); }
+  .header-cta:hover .header-cta__dot { transform: scale(1.6); }
+
+  @media (max-width: 560px) {
+    .site-header__inner { grid-template-columns: auto 1fr auto; gap: 12px; }
+    .wordmark { justify-self: center; }
+    .header-cta { font-size: 0; gap: 0; width: 44px; justify-content: flex-end; }
+    .header-cta::after {
+      content: '3D Map';
+      font-size: var(--type-label);
+    }
+    .header-cta__dot { display: none; }
+    .menu-btn > span:last-child {
+      /* visually hidden but still announced by screen readers */
+      position: absolute; width: 1px; height: 1px; overflow: hidden;
+      clip: rect(0, 0, 0, 0); white-space: nowrap;
+    }
+    .menu-btn { min-width: 44px; }
+  }
+
+  /* ── Menu dialog ─────────────────────────── */
+  .menu {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--bg);
+    color: var(--fg);
+  }
+  .menu::backdrop { background: var(--night); }
+  .menu__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 0 var(--gutter) var(--gutter);
+  }
+  .menu__top {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: var(--header-h);
+  }
+  .menu__count { justify-self: end; }
+  .menu__nav {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-block: 40px;
+  }
+  .menu__nav ol { width: 100%; border-top: 1px solid var(--line); }
+  .menu__nav li { border-bottom: 1px solid var(--line); }
+  .menu__nav a {
+    position: relative;
+    display: grid;
+    grid-template-columns: 8rem 1fr auto;
+    align-items: baseline;
+    gap: var(--gutter);
+    padding: clamp(10px, 1.6vh, 18px) 0;
+    transition: color 0.3s var(--ease-out), padding 0.5s var(--ease-out);
+  }
+  .menu__n { color: var(--muted); }
+  .menu__label {
+    font-family: var(--font-display);
+    font-size: var(--type-h2);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: var(--tracking-display);
+  }
+  .menu__nav a::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: var(--pin);
+    transform: scale(0);
+    transition: transform 0.4s var(--ease-out);
+  }
+  .menu__nav a:hover,
+  .menu__nav a:focus-visible { padding-left: 28px; }
+  .menu__nav a:hover::before,
+  .menu__nav a:focus-visible::before { transform: scale(1); }
+  .menu__nav a:hover .menu__label,
+  .menu__nav a:focus-visible .menu__label { font-style: italic; }
+  .menu__nav a[aria-current='true'] .menu__n { color: var(--pin); }
+
+  .menu__foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px 32px;
+  }
+  .menu__socials { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+
+  @media (max-width: 640px) {
+    .menu__nav a { grid-template-columns: 1fr; gap: 2px; }
+    .menu__note { display: none; }
+    .menu__wordmark { display: none; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .menu[open] .menu__nav li {
+      animation: menu-in 0.7s var(--ease-out) both;
+      animation-delay: calc(var(--i) * 50ms + 80ms);
+    }
+    .menu[open] { animation: fade 0.35s var(--ease-out); }
+  }
+  @keyframes menu-in {
+    from { opacity: 0; transform: translateY(24px); }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+  }
+</style>
