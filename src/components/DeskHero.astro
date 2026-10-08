@@ -1,0 +1,241 @@
+---
+/**
+ * The desk. A photo of the real workspace fills the screen; projects play on
+ * the laptop/monitor in it, warped to the screen's four corners. Until the
+ * photo exists, a labelled placeholder stands in with a flat screen.
+ */
+import { site, desk, projects } from '../content/site';
+
+const hasPhoto = Boolean(desk.photo.src);
+const ratio = desk.photo.width / desk.photo.height;
+const pad = (n: number) => String(n).padStart(2, '0');
+const isPh = (s: string) => /\[.+\]/.test(s);
+const email = site.email.replace(/[[\]]/g, '');
+---
+
+<section
+  id="top"
+  class="desk"
+  aria-label="Selected projects"
+  data-desk
+  data-ratio={ratio}
+  data-screen={JSON.stringify(desk.screen)}
+  data-focus={JSON.stringify(desk.focus)}
+>
+  <div class="desk__scene" data-scene>
+    {
+      hasPhoto ? (
+        <img class="desk__photo" src={desk.photo.src} alt={desk.photo.alt} width={desk.photo.width} height={desk.photo.height} fetchpriority="high" />
+      ) : (
+        <div class="desk__ph" role="img" aria-label="Placeholder for a photo of the desk">
+          <span class="label">Desk photo goes here</span>
+          <span class="desk__ph-note">A wide, well-lit photo of your workspace, with the screen facing the camera.</span>
+        </div>
+      )
+    }
+
+    <div class="desk__screen" data-screen-el>
+      {
+        projects.map((p, i) => (
+          <img
+            class:list={['desk__shot', { 'is-on': i === 0 }]}
+            src={p.image}
+            alt={`${p.name} — ${p.type}`}
+            loading={i === 0 ? 'eager' : 'lazy'}
+            data-shot={i}
+          />
+        ))
+      }
+      <span class="desk__glass" aria-hidden="true"></span>
+    </div>
+  </div>
+
+  <div class="desk__shade" aria-hidden="true"></div>
+
+  <header class="desk__top">
+    <a class="desk__logo" href="#top">
+      <img src="/brand/signature.png" alt={`${site.displayName} — home`} width="115" height="88" />
+    </a>
+    <a class="desk__contact label" href={`mailto:${email}`}>
+      <span class:list={[{ ph: isPh(site.email) }]}>Get in touch</span>
+    </a>
+  </header>
+
+  <div class="desk__bottom">
+    <div class="desk__intro">
+      <h1 class="desk__tagline">{site.tagline}</h1>
+      <p class="label desk__who">{site.displayName} · {site.role} · {site.location}</p>
+    </div>
+
+    <div class="desk__now" aria-live="polite">
+      <p class="desk__count label"><span data-count>01</span> / {pad(projects.length)}</p>
+      <p class="desk__name" data-name>{projects[0].name}</p>
+      <p class="desk__type label" data-type>{projects[0].type}</p>
+    </div>
+
+    {
+      projects.length > 1 && (
+        <div class="desk__nav">
+          <button type="button" class="desk__btn" data-prev aria-label="Previous project">←</button>
+          <button type="button" class="desk__btn" data-next aria-label="Next project">→</button>
+        </div>
+      )
+    }
+    <a class="desk__view label" href={projects[0].href || '#'} data-view hidden={!projects[0].href}>View project ↗</a>
+  </div>
+</section>
+
+<script type="application/json" id="desk-projects" set:html={JSON.stringify(projects)} />
+
+<style>
+  .desk {
+    position: relative;
+    height: 100svh;
+    min-height: 560px;
+    overflow: hidden;
+    background: var(--night);
+    color: var(--fog);
+  }
+
+  /* Scene: covers the viewport; JS keeps the focus point in view and warps the screen */
+  .desk__scene {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100vw, calc(100svh * 1.5));
+    aspect-ratio: 3 / 2;
+    translate: -50% -50%;
+  }
+  .desk__photo,
+  .desk__ph {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .desk__ph {
+    display: grid;
+    align-content: end;
+    justify-items: center;
+    gap: 8px;
+    padding-bottom: 22%;
+    text-align: center;
+    color: var(--muted, #94a1ab);
+    background:
+      radial-gradient(60% 50% at 50% 42%, #1d252d, #0c1014 70%),
+      #0c1014;
+    border: 1px dashed rgba(159, 191, 212, 0.25);
+  }
+  .desk__ph .label { color: var(--accent); }
+  .desk__ph-note { font-size: var(--type-small); max-width: 34ch; }
+
+  .desk__screen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1600px;
+    height: 1000px;
+    transform-origin: 0 0;
+    overflow: hidden;
+    background: #0a0d10;
+  }
+  /* until JS runs: a flat rectangle at the default corners */
+  :global(html:not(.js)) .desk__screen { left: 36%; top: 26%; width: 28%; height: 30%; }
+  .desk__shot {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.6s var(--ease-out);
+  }
+  .desk__shot.is-on { opacity: 1; }
+  .desk__glass {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 45%);
+    pointer-events: none;
+  }
+
+  /* Soft shade so the text at top and bottom stays readable over any photo */
+  .desk__shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgba(12, 16, 20, 0.7), transparent 18%),
+      linear-gradient(to top, rgba(12, 16, 20, 0.85), transparent 32%);
+  }
+
+  .desk__top {
+    position: absolute;
+    inset: 0 0 auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(14px, 2vw, 24px) var(--gutter);
+  }
+  .desk__logo img { height: clamp(44px, 4.4vw, 60px); width: auto; }
+  .desk__contact {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid rgba(232, 236, 238, 0.4);
+    border-radius: 999px;
+    transition: background 0.3s, color 0.3s;
+  }
+  .desk__contact:hover { background: var(--fog); color: var(--night); }
+
+  .desk__bottom {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: end;
+    gap: 12px 32px;
+    padding: 0 var(--gutter) clamp(20px, 3.5vw, 40px);
+  }
+  .desk__tagline {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: var(--fs-4);
+    line-height: 1;
+  }
+  .desk__who { margin-top: 10px; color: rgba(232, 236, 238, 0.7); }
+
+  .desk__now { text-align: right; }
+  .desk__count { color: var(--accent); }
+  .desk__name { font-family: var(--font-display); font-size: var(--fs-2); line-height: 1.1; margin-top: 4px; }
+  .desk__type { color: rgba(232, 236, 238, 0.7); margin-top: 4px; }
+
+  .desk__nav { display: flex; gap: 8px; }
+  .desk__btn {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(232, 236, 238, 0.4);
+    border-radius: 50%;
+    transition: background 0.3s, color 0.3s;
+  }
+  .desk__btn:hover { background: var(--fog); color: var(--night); }
+  .desk__view { min-height: 48px; display: inline-flex; align-items: center; }
+  .desk__view[hidden] { display: none; }
+
+  .ph { outline: 1px dashed currentColor; outline-offset: 3px; }
+
+  @media (max-width: 760px) {
+    .desk__bottom { grid-template-columns: 1fr auto; }
+    .desk__intro { grid-column: 1 / -1; }
+    .desk__now { text-align: left; }
+  }
+</style>
+
+<script>
+  import { initDesk } from '../scripts/desk';
+  initDesk();
+</script>

@@ -1,10 +1,7 @@
 ---
 import '../styles/global.css';
 import { site } from '../content/site';
-import { plain } from '../lib/format';
-
-const title = plain(site.title);
-const description = plain(site.description);
+const title = `${site.displayName} — ${site.role}`;
 ---
 
 <!doctype html>
@@ -13,26 +10,21 @@ const description = plain(site.description);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={site.description} />
     <meta name="theme-color" content="#0c1014" />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:description" content={site.description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Inter:wght@400;500&display=swap"
     />
-    <script is:inline>document.documentElement.classList.add('js');</script>
+    <script is:inline>document.documentElement.classList.add("js");</script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <slot />
-    <script>
-      import '../scripts/main.ts';
-    </script>
   </body>
 </html>
