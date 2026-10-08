@@ -7,6 +7,8 @@ export const site = {
   name: 'Abiola Oduyemi',
   displayName: 'Biola Odu',
   role: 'Brand, graphic & UI designer',
+  // The line under the hero headline (from Figma: Hero — Option A)
+  roles: 'Graphics designer | UI designer',
   location: 'Dublin, Ireland',
   tagline: 'Design that does more.',
   // ⚠️ Replace with your real email address.

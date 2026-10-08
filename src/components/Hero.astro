@@ -8,12 +8,23 @@ import { site } from '../content/site';
 const links = [
   { label: 'Work', href: '#work' },
   { label: 'About', href: '#about' },
-  { label: 'Process', href: '#process' },
 ];
 const email = site.email.replace(/[[\]]/g, '');
 ---
 
-<section id="top" class="hero" aria-labelledby="hero-title">
+<section id="top" class="hero" aria-labelledby="hero-title" data-hero>
+  <div class="hero__portrait" aria-hidden="true">
+    <img
+      src="/images/portrait@1x.png"
+      srcset="/images/portrait@1x.png 1x, /images/portrait@2x.png 2x"
+      alt=""
+      width="812"
+      height="977"
+      fetchpriority="high"
+      data-portrait
+    />
+  </div>
+
   <header class="hero__header">
     <button class="hero__menu" type="button" aria-haspopup="dialog" aria-controls="site-menu" data-menu-open>
       <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" stroke-width="1.5" /></svg>
@@ -28,11 +39,14 @@ const email = site.email.replace(/[[\]]/g, '');
     <a class="hero__map" href="#top" title="Placeholder — no 3D map section yet"><span class="ph">3D Map</span></a>
   </header>
 
+  <div class="hero__center">
   <h1 id="hero-title" class="hero__title">
     <span class="visually-hidden">{site.displayName} — </span>
     <img class="hero__script" src="/brand/design-word.png" alt="Design" width="165" height="94" />
     <span class="hero__caps">That does more</span>
   </h1>
+  <p class="hero__roles">{site.roles}</p>
+  </div>
 
   <nav class="pill" aria-label="Main">
     {links.map((l) => <a class="pill__link" href={l.href}>{l.label}</a>)}
@@ -55,6 +69,36 @@ const email = site.email.replace(/[[\]]/g, '');
   document.querySelector('[data-menu-open]')?.addEventListener('click', () => menu?.showModal());
   document.querySelector('[data-menu-close]')?.addEventListener('click', () => menu?.close());
   menu?.querySelectorAll('[data-menu-link]').forEach((a) => a.addEventListener('click', () => menu.close()));
+
+  // Portrait follows the mouse — a quick, eased glide with a slight lean.
+  // Mouse/trackpad only; off for touch and for reduced motion.
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  const img = document.querySelector<HTMLElement>('[data-portrait]');
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (hero && img && fine.matches && !still.matches) {
+    const MAX_X = 28, MAX_Y = 18, MAX_R = 1.6; // px, px, deg
+    let tx = 0, ty = 0, cx = 0, cy = 0, ts = 1, cs = 1, raf = 0;
+    const tick = () => {
+      cx += (tx - cx) * 0.14;
+      cy += (ty - cy) * 0.14;
+      cs += (ts - cs) * 0.14;
+      img.style.setProperty('--px', `${(cx * MAX_X).toFixed(2)}px`);
+      img.style.setProperty('--py', `${(cy * MAX_Y).toFixed(2)}px`);
+      img.style.setProperty('--pr', `${(cx * MAX_R).toFixed(3)}deg`);
+      img.style.setProperty('--ps', cs.toFixed(4));
+      raf = Math.abs(tx - cx) + Math.abs(ty - cy) + Math.abs(ts - cs) > 0.001 ? requestAnimationFrame(tick) : 0;
+    };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    hero.addEventListener('pointermove', (e) => {
+      const b = hero.getBoundingClientRect();
+      tx = ((e.clientX - b.left) / b.width) * 2 - 1;
+      ty = ((e.clientY - b.top) / b.height) * 2 - 1;
+      ts = 1.02;
+      kick();
+    });
+    hero.addEventListener('pointerleave', () => { tx = 0; ty = 0; ts = 1; kick(); });
+  }
 </script>
 
 <style>
@@ -67,6 +111,26 @@ const email = site.email.replace(/[[\]]/g, '');
     padding: 0 var(--gutter);
     background: var(--night);
     color: var(--fog);
+  }
+
+  /* ── Portrait: grey cutout blended with Overlay onto the night background (as in Figma) ── */
+  .hero { isolation: isolate; overflow: hidden; }
+  .hero__portrait {
+    position: absolute;
+    top: 17.7%;
+    left: calc(50% + 2.1%);
+    height: 108.5%;
+    aspect-ratio: 812 / 977;
+    translate: -50% 0;
+    z-index: -1;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  .hero__portrait img {
+    width: 100%;
+    height: 100%;
+    will-change: transform;
+    transform: translate3d(var(--px, 0px), var(--py, 0px), 0) rotate(var(--pr, 0deg)) scale(var(--ps, 1));
   }
 
   /* ── Header ── */
@@ -123,6 +187,22 @@ const email = site.email.replace(/[[\]]/g, '');
     text-transform: uppercase;
   }
 
+  /* the role line hangs under the headline without moving it off-centre */
+  .hero__center { position: relative; }
+  .hero__roles {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    translate: -50% 0;
+    margin: 9px 0 0;
+    white-space: nowrap;
+    text-align: center;
+    font-size: var(--fs-0);
+    letter-spacing: -0.006em;
+    text-transform: uppercase;
+    color: var(--mist);
+  }
+
   /* ── Floating pill menu ── */
   .pill {
     position: absolute;
@@ -131,8 +211,8 @@ const email = site.email.replace(/[[\]]/g, '');
     translate: -50% 0;
     display: flex;
     align-items: center;
-    gap: clamp(4px, 1.2vw, 16px);
-    padding: 8px 8px 8px clamp(10px, 1.4vw, 20px);
+    gap: clamp(12px, 2.2vw, 32px);
+    padding: 8px 8px 8px clamp(18px, 1.95vw, 28px);
     background: var(--night-2);
     border: 1px solid rgba(232, 236, 238, 0.85);
     border-radius: 999px;
@@ -149,10 +229,9 @@ const email = site.email.replace(/[[\]]/g, '');
     border-radius: 999px;
     transition: color 0.25s, background 0.25s;
   }
-  .pill__link { padding: 0 clamp(6px, 0.8vw, 10px); }
+  .pill__link { padding: 0; }
   .pill__link:hover { color: var(--accent); }
   .pill__cta {
-    margin-left: clamp(4px, 1vw, 14px);
     padding: 0 18px;
     background: var(--fog);
     color: var(--night);
