@@ -27,14 +27,14 @@ export const site = {
  *    usually the middle of the screen.
  */
 export const desk = {
-  photo: { src: '', alt: 'Biola’s desk in Dublin', width: 3000, height: 2000 },
+  photo: { src: '/images/desk.jpg', alt: 'Biola’s desk in Dublin: a curved monitor and laptop on a wooden desk in warm evening light', width: 1500, height: 2000 },
   screen: [
-    [36, 26],
-    [64, 26],
-    [64, 56],
-    [36, 56],
+    [22.1, 18.2],
+    [73.0, 18.6],
+    [73.7, 40.0],
+    [24.0, 45.0],
   ] as [number, number][],
-  focus: [50, 41] as [number, number],
+  focus: [48, 33] as [number, number],
 };
 
 /** Projects shown on the screen, in order. `href` links to the case study or live site. */
