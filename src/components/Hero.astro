@@ -13,17 +13,28 @@ const email = site.email.replace(/[[\]]/g, '');
 ---
 
 <section id="top" class="hero" aria-labelledby="hero-title" data-hero>
-  <div class="hero__portrait" aria-hidden="true">
-    <img
-      src="/images/portrait@1x.png"
-      srcset="/images/portrait@1x.png 1x, /images/portrait@2x.png 2x"
-      alt=""
-      width="812"
-      height="977"
-      fetchpriority="high"
-      data-portrait
-    />
-  </div>
+  <!-- Portrait: a dark "ghost" (Overlay blend, as in Figma) and the full-colour
+       original on top, revealed only inside a spotlight where the cursor touches the body. -->
+  <img
+    class="portrait portrait--ghost"
+    src="/images/portrait@1x.webp"
+    srcset="/images/portrait@1x.webp 1x, /images/portrait@2x.webp 2x"
+    alt=""
+    aria-hidden="true"
+    width="812"
+    height="977"
+    fetchpriority="high"
+  />
+  <img
+    class="portrait portrait--colour"
+    src="/images/portrait-colour@1x.webp"
+    srcset="/images/portrait-colour@1x.webp 1x, /images/portrait-colour@2x.webp 2x"
+    alt=""
+    aria-hidden="true"
+    width="812"
+    height="977"
+    data-colour
+  />
 
   <header class="hero__header">
     <button class="hero__menu" type="button" aria-haspopup="dialog" aria-controls="site-menu" data-menu-open>
@@ -70,34 +81,89 @@ const email = site.email.replace(/[[\]]/g, '');
   document.querySelector('[data-menu-close]')?.addEventListener('click', () => menu?.close());
   menu?.querySelectorAll('[data-menu-link]').forEach((a) => a.addEventListener('click', () => menu.close()));
 
-  // Portrait follows the mouse — a quick, eased glide with a slight lean.
-  // Mouse/trackpad only; off for touch and for reduced motion.
+  // ── Portrait: glides toward the mouse, and a spotlight reveals the colour
+  // original wherever the cursor is over the body (transparent pixels don't count).
   const hero = document.querySelector<HTMLElement>('[data-hero]');
-  const img = document.querySelector<HTMLElement>('[data-portrait]');
+  const colour = document.querySelector<HTMLImageElement>('[data-colour]');
   const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
   const still = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (hero && img && fine.matches && !still.matches) {
-    const MAX_X = 28, MAX_Y = 18, MAX_R = 1.6; // px, px, deg
-    let tx = 0, ty = 0, cx = 0, cy = 0, ts = 1, cs = 1, raf = 0;
+
+  if (hero && colour) {
+    const MAX_X = 28, MAX_Y = 18, MAX_R = 1.6; // drift px, px, lean deg
+    const RADIUS = () => Math.max(110, Math.min(200, colour.getBoundingClientRect().width * 0.22));
+    const ease = still.matches ? 1 : 0.14;
+    let tx = 0, ty = 0, cx = 0, cy = 0, ts = 1, cs = 1; // drift
+    let tr = 0, cr = 0, mx = 0, my = 0, cmx = 0, cmy = 0; // spotlight
+    let raf = 0;
+
+    // alpha hit-test: is the cursor over the body, not the transparent background?
+    const probe = document.createElement('canvas');
+    const pctx = probe.getContext('2d', { willReadFrequently: true });
+    // copy the image into the probe lazily (the 2x source may swap in after first paint)
+    let drawn = '';
+    const ensureProbe = () => {
+      if (!pctx || !colour.complete || !colour.naturalWidth) return false;
+      if (drawn !== colour.currentSrc) {
+        probe.width = colour.naturalWidth;
+        probe.height = colour.naturalHeight;
+        pctx.clearRect(0, 0, probe.width, probe.height);
+        pctx.drawImage(colour, 0, 0);
+        drawn = colour.currentSrc;
+      }
+      return true;
+    };
+    colour.addEventListener('load', () => { drawn = ''; });
+    const overBody = (x: number, y: number, b: DOMRect) => {
+      if (!ensureProbe() || !pctx) return true;
+      const u = Math.floor(((x - b.left) / b.width) * probe.width);
+      const v = Math.floor(((y - b.top) / b.height) * probe.height);
+      if (u < 0 || v < 0 || u >= probe.width || v >= probe.height) return false;
+      return pctx.getImageData(u, v, 1, 1).data[3] > 40;
+    };
+
     const tick = () => {
-      cx += (tx - cx) * 0.14;
-      cy += (ty - cy) * 0.14;
-      cs += (ts - cs) * 0.14;
-      img.style.setProperty('--px', `${(cx * MAX_X).toFixed(2)}px`);
-      img.style.setProperty('--py', `${(cy * MAX_Y).toFixed(2)}px`);
-      img.style.setProperty('--pr', `${(cx * MAX_R).toFixed(3)}deg`);
-      img.style.setProperty('--ps', cs.toFixed(4));
-      raf = Math.abs(tx - cx) + Math.abs(ty - cy) + Math.abs(ts - cs) > 0.001 ? requestAnimationFrame(tick) : 0;
+      cx += (tx - cx) * ease; cy += (ty - cy) * ease; cs += (ts - cs) * ease;
+      cr += (tr - cr) * (still.matches ? 1 : 0.18);
+      cmx += (mx - cmx) * (still.matches ? 1 : 0.35); cmy += (my - cmy) * (still.matches ? 1 : 0.35);
+      if (fine.matches && !still.matches) {
+        hero.style.setProperty('--px', `${(cx * MAX_X).toFixed(2)}px`);
+        hero.style.setProperty('--py', `${(cy * MAX_Y).toFixed(2)}px`);
+        hero.style.setProperty('--pr', `${(cx * MAX_R).toFixed(3)}deg`);
+        hero.style.setProperty('--ps', cs.toFixed(4));
+      }
+      colour.style.setProperty('--r', `${cr.toFixed(1)}px`);
+      colour.style.setProperty('--mx', `${cmx.toFixed(1)}px`);
+      colour.style.setProperty('--my', `${cmy.toFixed(1)}px`);
+      const moving = Math.abs(tx - cx) + Math.abs(ty - cy) + Math.abs(ts - cs) + Math.abs(tr - cr) / 50 + (Math.abs(mx - cmx) + Math.abs(my - cmy)) / 50;
+      raf = moving > 0.002 ? requestAnimationFrame(tick) : 0;
     };
     const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+
+    const aim = (e: PointerEvent) => {
+      const h = hero.getBoundingClientRect();
+      tx = ((e.clientX - h.left) / h.width) * 2 - 1;
+      ty = ((e.clientY - h.top) / h.height) * 2 - 1;
+      const b = colour.getBoundingClientRect();
+      mx = ((e.clientX - b.left) / b.width) * colour.offsetWidth;
+      my = ((e.clientY - b.top) / b.height) * colour.offsetHeight;
+      if (!cr) { cmx = mx; cmy = my; } // start the spotlight where the cursor enters
+      tr = overBody(e.clientX, e.clientY, b) ? RADIUS() : 0;
+    };
+
     hero.addEventListener('pointermove', (e) => {
-      const b = hero.getBoundingClientRect();
-      tx = ((e.clientX - b.left) / b.width) * 2 - 1;
-      ty = ((e.clientY - b.top) / b.height) * 2 - 1;
-      ts = 1.02;
-      kick();
+      if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      aim(e); ts = 1.02; kick();
     });
-    hero.addEventListener('pointerleave', () => { tx = 0; ty = 0; ts = 1; kick(); });
+    hero.addEventListener('pointerleave', () => { tx = 0; ty = 0; ts = 1; tr = 0; kick(); });
+
+    // Touch: tap the portrait to reveal the colour there for a moment
+    let hide = 0;
+    hero.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      aim(e); kick();
+      clearTimeout(hide);
+      hide = window.setTimeout(() => { tr = 0; kick(); }, 1600);
+    });
   }
 </script>
 
@@ -113,24 +179,30 @@ const email = site.email.replace(/[[\]]/g, '');
     color: var(--fog);
   }
 
-  /* ── Portrait: grey cutout blended with Overlay onto the night background (as in Figma) ── */
+  /* ── Portrait ──
+     Both layers sit directly in the hero (which isolates blending), so the ghost's
+     Overlay blend reaches the night background. Motion vars (--px etc.) live on .hero. */
   .hero { isolation: isolate; overflow: hidden; }
-  .hero__portrait {
+  .portrait {
     position: absolute;
     top: 17.7%;
-    left: calc(50% + 2.1%);
+    left: 52.1%;
     height: 108.5%;
+    width: auto;
     aspect-ratio: 812 / 977;
+    max-width: none;
     translate: -50% 0;
     z-index: -1;
     pointer-events: none;
-    mix-blend-mode: overlay;
-  }
-  .hero__portrait img {
-    width: 100%;
-    height: 100%;
+    user-select: none;
     will-change: transform;
     transform: translate3d(var(--px, 0px), var(--py, 0px), 0) rotate(var(--pr, 0deg)) scale(var(--ps, 1));
+  }
+  .portrait--ghost { mix-blend-mode: overlay; }
+  .portrait--colour {
+    /* spotlight: --r is the radius, --mx/--my the centre (px within the image) */
+    -webkit-mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), #000 0, #000 calc(var(--r, 0px) * 0.55), transparent var(--r, 0px));
+    mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), #000 0, #000 calc(var(--r, 0px) * 0.55), transparent var(--r, 0px));
   }
 
   /* ── Header ── */
