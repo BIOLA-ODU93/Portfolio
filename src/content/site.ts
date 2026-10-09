@@ -74,7 +74,7 @@ export type Stop = {
 export const journey = {
   kicker: 'The journey',
   title: 'From Nigeria to Dublin',
-  intro: 'Scroll to travel my path — by danfo, by plane, by car — and what changed because of the work.',
+  intro: 'Travel my path — by danfo, by plane, by car — and see what changed because of the work.',
   stops: [
     {
       when: '2014',

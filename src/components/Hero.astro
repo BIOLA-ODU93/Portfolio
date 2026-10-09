@@ -46,7 +46,7 @@ const email = site.email.replace(/[[\]]/g, '');
       <img src="/brand/signature.png" alt={`${site.displayName} — home`} width="115" height="88" />
     </a>
 
-    <a class="hero__map" href="#journey">3D Map</a>
+    <button class="hero__map" type="button" data-journey-open aria-haspopup="dialog" aria-controls="journey-map">3D Map</button>
   </header>
 
   <div class="hero__center">

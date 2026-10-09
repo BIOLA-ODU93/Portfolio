@@ -1,4 +1,5 @@
 ---
+import 'lenis/dist/lenis.css';
 import '../styles/global.css';
 import { site } from '../content/site';
 const title = `${site.displayName} — ${site.role}`;
@@ -26,5 +27,9 @@ const title = `${site.displayName} — ${site.role}`;
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <slot />
+    <script>
+      import { initSmoothScroll } from '../scripts/smooth';
+      initSmoothScroll();
+    </script>
   </body>
 </html>
