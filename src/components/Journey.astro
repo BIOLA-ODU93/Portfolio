@@ -1,0 +1,450 @@
+---
+/**
+ * The Journey — a scroll-driven 3D map (after sobha-privy-collection.com/location).
+ * A dark monochrome map of Nigeria and Ireland joined by a flight route. Scrolling
+ * flies a camera from stop to stop (in the order of `journey.stops`); each stop has a
+ * small landmark, a floating pin and a card with the years, role and results.
+ * Copy lives in src/content/site.ts (`journey`). Map drawing lives here.
+ */
+import { journey } from '../content/site';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const isPh = (s: string) => /\[.+\]/.test(s);
+const rich = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\[(.+?)\]/g, '<span class="ph">$1</span>');
+
+// ── Geography (stylised; simplified outlines, not to scale between countries)
+const ng = (lon: number, lat: number) => [120 + (lon - 2.6) * 80, 1520 - (lat - 4.2) * 80];
+const ie = (lon: number, lat: number) => [1560 + (lon + 10.6) * 84, 160 + (55.5 - lat) * 140];
+const nigeria = [
+  [2.7, 6.4], [3.4, 6.4], [4.5, 6.2], [5.0, 5.6], [5.5, 5.0], [6.0, 4.3], [7.0, 4.4], [8.3, 4.6], [8.7, 5.0],
+  [9.5, 6.2], [10.6, 7.0], [11.8, 7.0], [12.3, 8.2], [13.6, 10.0], [14.5, 12.0], [14.0, 13.0], [13.0, 13.6],
+  [12.0, 13.2], [10.5, 13.2], [9.0, 12.8], [7.8, 13.3], [6.0, 13.6], [4.4, 13.6], [3.6, 12.5], [3.6, 11.4],
+  [2.8, 9.7], [2.7, 8.0],
+].map(([a, b]) => ng(a, b));
+const ireland = [
+  [-6.0, 52.2], [-6.1, 52.9], [-6.2, 53.35], [-6.1, 54.0], [-5.5, 54.6], [-6.0, 55.2], [-7.3, 55.4], [-8.3, 55.1],
+  [-8.5, 54.6], [-10.1, 54.2], [-9.9, 53.5], [-10.2, 53.3], [-9.5, 52.6], [-10.4, 52.1], [-9.8, 51.6], [-8.5, 51.6],
+  [-7.5, 52.0], [-6.4, 52.15],
+].map(([a, b]) => ie(a, b));
+const smooth = (pts: number[][]) => {
+  // closed Catmull-Rom → cubic Bézier, so coastlines read as drawn, not polygonal
+  const n = pts.length;
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d + ' Z';
+};
+const lands = [
+  { d: smooth(nigeria), c: [600, 1130], label: 'Nigeria', lx: 640, ly: 980 },
+  { d: smooth(ireland), c: [1760, 440], label: 'Ireland', lx: 1700, ly: 660 },
+];
+const contour = [0.82, 0.62, 0.42];
+
+// The route: through every stop in order
+const pts = journey.stops.map((s) => s.at);
+const route = (() => {
+  let d = `M${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - Math.min(160, Math.hypot(x1 - x0, y1 - y0) * 0.18);
+    d += ` Q${mx.toFixed(1)} ${my.toFixed(1)} ${x1} ${y1}`;
+  }
+  return d;
+})();
+
+// Landmarks: small clusters of standing blocks (grey "buildings"), one per stop
+const blocks = (i: number, region: string) => {
+  if (region === 'route') return [];
+  const base = [
+    [[-34, 10, 34, 70], [8, -6, 28, 120], [44, 14, 30, 54]],
+    [[-28, 6, 30, 52], [10, -4, 36, 86]],
+    [[-40, 8, 30, 64], [0, -10, 34, 150], [40, 10, 26, 80]],
+    [[-36, 4, 32, 90], [6, -8, 40, 60], [46, 8, 28, 110]],
+  ][i % 4];
+  return base.map(([dx, dy, w, h]) => ({ dx, dy, w, h }));
+};
+
+const cams = [
+  { x: 1150, y: 860, s: 0.36, tilt: 50, rot: -8 },
+  ...journey.stops.map((s, i) => ({ x: s.at[0], y: s.at[1] + 40, s: s.region === 'route' ? 0.85 : 1.25, tilt: 52 + (i % 2) * 3, rot: -8 + (i % 3) * 4 })),
+];
+---
+
+<section
+  id="journey"
+  class="journey"
+  aria-labelledby="journey-title"
+  data-journey
+  data-cameras={JSON.stringify(cams)}
+  style={`--stops:${journey.stops.length}`}
+>
+  <div class="journey__stage">
+    <div class="journey__viewport" aria-hidden="true">
+      <div class="jworld" data-jworld>
+        <div class="jworld__sea"></div>
+        <svg class="jworld__map" viewBox="0 0 2400 1600" width="2400" height="1600">
+          {lands.map((l) => (
+            <g>
+              <path class="land" d={l.d} />
+              {contour.map((k) => (
+                <path class="contour" d={l.d} transform={`translate(${l.c[0]} ${l.c[1]}) scale(${k}) translate(${-l.c[0]} ${-l.c[1]})`} />
+              ))}
+            </g>
+          ))}
+          <path class="route" d={route} />
+          <path class="route-lit" d={route} pathLength="1" data-jroute />
+        </svg>
+
+        {lands.map((l) => <p class="land-label" style={`left:${l.lx}px;top:${l.ly}px`}>{l.label}</p>)}
+
+        {
+          journey.stops.map((s, i) => (
+            <div class="stop" data-jstop={i}>
+              <span class="stop__ring" style={`left:${s.at[0]}px;top:${s.at[1]}px`} />
+              {blocks(i, s.region).map((b) => (
+                <>
+                  <span class="block-shadow" style={`left:${s.at[0] + b.dx - b.w * 0.65}px;top:${s.at[1] + b.dy - b.h * 0.5}px;width:${b.w * 1.3}px;height:${b.h * 0.5}px`} />
+                  <span class="block" style={`left:${s.at[0] + b.dx - b.w / 2}px;top:${s.at[1] + b.dy - b.h}px;width:${b.w}px;height:${b.h}px`} />
+                </>
+              ))}
+              <span class="jpin" style={`--x:${s.at[0]}px;--y:${s.at[1]}px;--z:${s.region === 'route' ? 60 : 190}px`}>
+                <span class="jpin__dot" />
+                <span class="jpin__label">{s.title}</span>
+              </span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="journey__fog" aria-hidden="true"></div>
+
+    <div class="journey__intro" data-jintro>
+      <p class="label journey__kicker">{journey.kicker}</p>
+      <h2 id="journey-title" class="journey__title">{journey.title}</h2>
+      <p class="journey__lede">{journey.intro}</p>
+    </div>
+
+    <ol class="jcards">
+      {
+        journey.stops.map((s, i) => (
+          <li class="jcard" data-jcard={i}>
+            <p class="label jcard__when">
+              <span class="jcard__n">{pad(i + 1)}</span>
+              <span class="jcard__rule" aria-hidden="true" />
+              <span set:html={rich(s.when)} />
+            </p>
+            <h3 class="jcard__title">{s.title}</h3>
+            <p class="jcard__role">
+              {s.role} · <span set:html={rich(s.place)} />
+            </p>
+            <ul class="jcard__points">
+              {s.points.map((pt) => <li set:html={rich(pt)} />)}
+            </ul>
+            {s.metrics && (
+              <ul class="jcard__metrics" aria-label="Results">
+                {s.metrics.map((m) => <li>{m}</li>)}
+              </ul>
+            )}
+            {s.links && (
+              <ul class="jcard__links">
+                {s.links.map((l) => (
+                  <li><a href={l.href} target="_blank" rel="noopener noreferrer">{l.label} ↗</a></li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))
+      }
+    </ol>
+
+    <nav class="jnav" aria-label="Journey stops">
+      <ol>
+        {
+          journey.stops.map((s, i) => (
+            <li>
+              <button type="button" data-jgoto={i + 1}>
+                <span class="jnav__when" set:html={rich(s.when)} />
+                <span class="jnav__title">{s.title}</span>
+              </button>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    <p class="journey__hint label" data-jhint>Scroll to travel ↓</p>
+  </div>
+</section>
+
+<style>
+  .journey {
+    position: relative;
+    height: calc(100svh + var(--stops) * 95svh);
+    background: var(--night);
+    color: var(--fog);
+  }
+  .journey__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .journey__viewport {
+    position: absolute;
+    inset: 0;
+    perspective: 1600px;
+    perspective-origin: var(--ax, 60%) var(--ay, 50%);
+  }
+
+  /* ── World ── */
+  .jworld {
+    position: absolute;
+    left: var(--ax, 60%);
+    top: var(--ay, 50%);
+    width: 2400px;
+    height: 1600px;
+    transform-origin: 0 0;
+    transform-style: preserve-3d;
+    transform: rotateX(50deg) rotateZ(-8deg) scale(0.36) translate(-1150px, -860px);
+    will-change: transform;
+    --tilt: 50deg;
+    --rot: -8deg;
+    --inv: 2.7;
+  }
+  .jworld * { transform-style: preserve-3d; }
+  .jworld__sea {
+    position: absolute;
+    inset: -1200px;
+    background-color: #0b0f13;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(197, 210, 219, 0.07) 1px, transparent 1.5px);
+    background-size: 28px 28px;
+  }
+  .jworld__map { position: absolute; inset: 0; overflow: visible; transform: translateZ(1px); }
+  .land { fill: #2a3138; stroke: rgba(232, 236, 238, 0.35); stroke-width: 2; }
+  .contour { fill: none; stroke: rgba(232, 236, 238, 0.07); stroke-width: 2; }
+  .route { fill: none; stroke: rgba(232, 236, 238, 0.22); stroke-width: 2.5; stroke-dasharray: 10 14; }
+  .route-lit { fill: none; stroke: #e8ecee; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .land-label {
+    position: absolute;
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 96px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(232, 236, 238, 0.13);
+    transform: translate(-50%, -50%) translateZ(2px);
+    white-space: nowrap;
+  }
+
+  .stop__ring {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(232, 236, 238, 0.25);
+    transform: translateZ(3px);
+    transition: border-color 0.4s, background 0.4s;
+  }
+  .stop.is-active .stop__ring { border-color: rgba(232, 236, 238, 0.8); background: rgba(232, 236, 238, 0.06); }
+  .block {
+    position: absolute;
+    transform-origin: 50% 100%;
+    transform: translateZ(4px) rotateX(-90deg);
+    background: linear-gradient(180deg, #d9dee2, #8e979e);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  }
+  .block-shadow {
+    position: absolute;
+    background: radial-gradient(50% 100% at 50% 100%, rgba(0, 0, 0, 0.6), transparent 75%);
+    transform-origin: 50% 100%;
+    transform: translateZ(3px) skewX(-20deg);
+  }
+
+  /* Pins float above the map and always face the camera */
+  .jpin {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    transform: translate3d(var(--x), var(--y), var(--z)) rotateZ(calc(var(--rot) * -1)) rotateX(calc(var(--tilt) * -1)) scale(var(--inv));
+    transition: opacity 0.4s;
+  }
+  .jpin__dot {
+    position: absolute;
+    left: -9px;
+    top: -9px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid #e8ecee;
+    background: rgba(12, 16, 20, 0.6);
+  }
+  .jpin__dot::before,
+  .jpin__dot::after { content: ''; position: absolute; left: 50%; top: 50%; background: #e8ecee; transform: translate(-50%, -50%); }
+  .jpin__dot::before { width: 8px; height: 1.5px; }
+  .jpin__dot::after { width: 1.5px; height: 8px; }
+  .jpin__label {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font: 500 11px/1 var(--font-sans);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #e8ecee;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+  }
+  /* only the stop you're visiting shows its name — clusters stay readable */
+  .jpin__label { opacity: 0; transition: opacity 0.4s; }
+  .stop.is-active .jpin__label { opacity: 1; }
+  .stop.is-active .jpin__dot { background: #e8ecee; }
+  .stop.is-active .jpin__dot::before,
+  .stop.is-active .jpin__dot::after { background: var(--night); }
+
+  .journey__fog {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, var(--night), rgba(12, 16, 20, 0) 20%),
+      linear-gradient(to top, var(--night), rgba(12, 16, 20, 0) 26%),
+      radial-gradient(120% 90% at 55% 50%, transparent 50%, rgba(12, 16, 20, 0.85));
+  }
+
+  /* ── Overview title (like the reference's LOCATION) ── */
+  .journey__intro {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 14px;
+    padding: var(--gutter);
+    text-align: center;
+    pointer-events: none;
+    background: radial-gradient(60% 50% at 50% 50%, rgba(12, 16, 20, 0.7), transparent 75%);
+  }
+  .journey__kicker { color: var(--mist); }
+  .journey__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: var(--fs-7);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .journey__lede { max-width: 40ch; color: rgba(232, 236, 238, 0.75); font-size: var(--type-small); }
+
+  /* ── Cards ── */
+  .jcards {
+    position: absolute;
+    left: var(--gutter);
+    bottom: clamp(20px, 4vh, 40px);
+    width: min(440px, calc(100% - 2 * var(--gutter)));
+    pointer-events: none;
+  }
+  .jcard {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    display: grid;
+    gap: 10px;
+    padding: clamp(18px, 2.2vw, 28px);
+    background: rgba(12, 16, 20, 0.78);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(232, 236, 238, 0.14);
+    border-radius: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(14px);
+    transition: opacity 0.45s var(--ease-out), transform 0.55s var(--ease-out), visibility 0s linear 0.55s;
+  }
+  .jcard.is-active { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition-delay: 0s; }
+  .jcard__when { display: flex; align-items: center; gap: 12px; color: var(--mist); }
+  .jcard__n { color: var(--fog); }
+  .jcard__rule { width: 28px; height: 1px; background: rgba(232, 236, 238, 0.3); }
+  .jcard__title { margin: 0; font-family: var(--font-display); font-weight: 300; font-size: var(--fs-4); line-height: 1; }
+  .jcard__role { margin: 0; font-size: var(--type-small); color: rgba(232, 236, 238, 0.8); }
+  .jcard__points { display: grid; gap: 6px; font-size: var(--type-small); line-height: 1.5; color: rgba(232, 236, 238, 0.72); }
+  .jcard__points li { position: relative; padding-left: 16px; }
+  .jcard__points li::before { content: ''; position: absolute; left: 0; top: 0.7em; width: 8px; height: 1px; background: var(--mist); }
+  .jcard__metrics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .jcard__metrics li {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #e8ecee;
+    color: var(--night);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .jcard__links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--type-small); }
+  .jcard__links a { border-bottom: 1px solid rgba(232, 236, 238, 0.4); }
+  .jcard__links a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Year index (right) ── */
+  .jnav {
+    position: absolute;
+    right: var(--gutter);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 10px 14px;
+    background: rgba(12, 16, 20, 0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-radius: 4px;
+  }
+  .jnav ol { display: grid; gap: 2px; border-left: 1px solid rgba(232, 236, 238, 0.18); }
+  .jnav button {
+    display: grid;
+    gap: 2px;
+    text-align: left;
+    padding: 6px 0 6px 14px;
+    margin-left: -1px;
+    border-left: 1px solid transparent;
+    color: rgba(232, 236, 238, 0.5);
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .jnav button:hover,
+  .jnav button[aria-current='true'] { color: var(--fog); border-left-color: var(--fog); }
+  .jnav__when { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
+  .jnav__title { font-family: var(--font-display); font-size: 17px; line-height: 1.1; }
+
+  .journey__hint {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(20px, 4vh, 40px);
+    translate: -50% 0;
+    color: rgba(232, 236, 238, 0.7);
+  }
+
+  .ph { outline: 1px dashed currentColor; outline-offset: 2px; }
+
+  :global(html:not(.js)) .journey { height: auto; }
+  :global(html:not(.js)) .journey__stage { position: relative; height: auto; }
+
+  @media (max-width: 900px) {
+    .jnav { display: none; }
+    .journey__viewport { perspective: 1100px; }
+  }
+</style>
+
+<script>
+  import { initJourney } from '../scripts/journey';
+  initJourney();
+</script>
