@@ -6,15 +6,15 @@
 export const site = {
   name: 'Abiola Oduyemi',
   displayName: 'Biola Odu',
-  role: 'Brand, graphic & UI designer',
+  role: 'Product Designer & Graphic Designer',
   // The line under the hero headline (from Figma: Hero — Option A)
-  roles: 'Graphics designer | UI designer',
+  roles: 'Product Designer | Graphic Designer',
   location: 'Dublin, Ireland',
   tagline: 'Design that does more.',
   // ⚠️ Replace with your real email address.
   email: '[you@yourdomain.com]',
   description:
-    'Portfolio of Abiola (Biola) Oduyemi — brand, graphic and UI designer based in Dublin.',
+    'Portfolio of Abiola (Biola) Oduyemi — product designer and graphic designer based in Dublin, designing web and mobile products for fintech and B2B.',
 };
 
 /**
