@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "predev": "node scripts/copy-maplibre-worker.mjs",
+    "prebuild": "node scripts/copy-maplibre-worker.mjs"
   },
   "dependencies": {
-    "astro": "7.3.7"
+    "astro": "7.3.7",
+    "maplibre-gl": "6.11.2"
   }
 }
