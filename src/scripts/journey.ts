@@ -202,6 +202,8 @@ export function initJourney() {
     }
     if (intro) { const o = clamp(1 - p * 2.2); intro.style.opacity = String(o); intro.style.transform = `translateY(${(o - 1) * 24}px)`; }
     if (!ready || !map || !vehicles) return;
+    // reveal the map once its tiles are drawn, so it never pops in half-finished
+    if (!mapEl.classList.contains('is-ready') && map.areTilesLoaded()) mapEl.classList.add('is-ready');
 
     const v = view(p);
     // camera follows through a low-pass filter: smooth on twisty roads, exact when settled
@@ -304,25 +306,42 @@ export function initJourney() {
     }
   })());
 
-  // ── Open / close
+  // ── Open / close — a smooth fade both ways
+  const FADE = reduce.matches ? 0 : 700;
   const open = () => {
     if (dialog.open) return;
     dialog.showModal();
+    document.documentElement.classList.add('journey-open');
     pauseScroll();
+    requestAnimationFrame(() => requestAnimationFrame(() => dialog.classList.add('is-in')));
     nextBtn?.focus({ preventScroll: true });
-    ensureMap().then(() => map?.resize());
+    ensureMap().then(() => {
+      map?.resize();
+      // safety net: reveal the map even if some tiles are slow
+      window.setTimeout(() => mapEl.classList.add('is-ready'), 3500);
+    });
     last = 0;
     primed = false;
     cancelAnimationFrame(loop);
     loop = requestAnimationFrame(frame);
     syncUI();
   };
+  let closing = 0;
+  const close = () => {
+    if (!dialog.open || closing) return;
+    dialog.classList.remove('is-in');
+    document.documentElement.classList.remove('journey-open');
+    closing = window.setTimeout(() => { closing = 0; dialog.close(); }, FADE);
+  };
+  dialog.addEventListener('cancel', (e) => { e.preventDefault(); close(); }); // Esc fades out too
   dialog.addEventListener('close', () => {
     stopPlay();
     cancelAnimationFrame(loop);
+    dialog.classList.remove('is-in');
+    document.documentElement.classList.remove('journey-open');
     resumeScroll();
   });
-  dialog.querySelector('[data-journey-close]')?.addEventListener('click', () => dialog.close());
+  dialog.querySelector('[data-journey-close]')?.addEventListener('click', close);
   document.querySelectorAll('[data-journey-open]').forEach((b) => {
     b.addEventListener('click', (e) => { e.preventDefault(); open(); });
     b.addEventListener('pointerenter', () => { import('maplibre-gl'); }, { once: true }); // warm up on hover
