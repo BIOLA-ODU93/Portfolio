@@ -52,7 +52,7 @@ const email = site.email.replace(/[[\]]/g, '');
   <div class="hero__center">
   <h1 id="hero-title" class="hero__title">
     <span class="visually-hidden">{site.displayName} — </span>
-    <img class="hero__script" src="/brand/design-word.png" alt="Design" width="165" height="94" />
+    <img class="hero__script" src="/brand/the-designer-word.png" alt="The Designer" width="301" height="95" />
     <span class="hero__caps">That does more</span>
   </h1>
   <p class="hero__roles">{site.roles}</p>
@@ -247,7 +247,8 @@ const email = site.email.replace(/[[\]]/g, '');
     text-align: center;
   }
   .hero__script {
-    width: clamp(104px, 11.5vw, 165px);
+    /* "The Designer" in Filmotype Yukon, exported from Figma (301px wide at 1440) */
+    width: clamp(190px, 20.9vw, 301px);
     height: auto;
   }
   .hero__caps {
