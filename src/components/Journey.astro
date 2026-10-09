@@ -103,14 +103,7 @@ const rich = (s: string) =>
       radial-gradient(130% 100% at 60% 45%, transparent 55%, rgba(12, 16, 20, 0.7));
   }
 
-  /* ── Vehicles & pins (MapLibre markers; styled globally since they're injected) ── */
-  :global(.jv) { width: 64px; height: 64px; pointer-events: none; } /* must have a size: zero-size 3D markers aren't painted */
-  :global(.jv svg) { position: absolute; left: 50%; top: 50%; translate: -50% -50%; display: none; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55)); }
-  :global(.jv[data-v='danfo'] .jv__danfo),
-  :global(.jv[data-v='car'] .jv__car),
-  :global(.jv[data-v='plane'] .jv__plane) { display: block; }
-  :global(.jv__plane) { transform: scale(var(--alt, 1)); transition: none; }
-
+  /* ── Stop pins (MapLibre markers; styled globally since they're injected). Vehicles are 3D — see journey-vehicles.ts */
   :global(.jstop) { pointer-events: none; }
   :global(.jstop__dot) {
     display: block;
