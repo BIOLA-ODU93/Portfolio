@@ -1,0 +1,168 @@
+---
+/**
+ * About me — light section after the dark hero. Copy lives in site.ts (`about`).
+ */
+import { about, site } from '../content/site';
+
+const rich = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\[(.+?)\]/g, '<span class="ph">$1</span>');
+---
+
+<section id="about" class="about" aria-labelledby="about-title">
+  <div class="about__inner">
+    <figure class="about__portrait">
+      <span class="about__portrait-bg" aria-hidden="true"></span>
+      <img
+        src={about.portrait.src}
+        srcset={`${about.portrait.src} 1x, ${about.portrait.src2x} 2x`}
+        alt={about.portrait.alt}
+        width="812"
+        height="977"
+        loading="lazy"
+        decoding="async"
+      />
+      <figcaption class="label">{site.name} · {site.location}</figcaption>
+    </figure>
+
+    <div class="about__copy">
+      <p class="label about__kicker"><span class="about__dot" aria-hidden="true"></span>{about.kicker}</p>
+      <h2 id="about-title" class="about__statement" set:html={rich(about.statement)} />
+      <div class="about__bio">
+        {about.bio.map((p) => <p set:html={rich(p)} />)}
+        {about.personal && <p class="about__personal" set:html={rich(about.personal)} />}
+      </div>
+
+      <dl class="about__facts">
+        {about.facts.map((f) => (
+          <div><dt class="label">{f.label}</dt><dd>{f.value}</dd></div>
+        ))}
+      </dl>
+
+      <div class="about__actions">
+        <button class="btn btn--dark" type="button" data-contact-open>Let’s talk</button>
+        <a class="btn" href={site.cv} download>Download CV ↓</a>
+        <a class="about__link" href={site.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="about__results">
+    <p class="label about__results-title">Results from shipped work</p>
+    <ul>
+      {about.results.map((r) => (
+        <li>
+          <span class="about__value">{r.value}</span>
+          <span class="about__what">{r.label}</span>
+          <span class="label about__where">{r.where}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="about__tools">
+    <p class="label">Tools I work with</p>
+    <ul>{about.tools.map((t) => <li>{t}</li>)}</ul>
+  </div>
+</section>
+
+<style>
+  .about {
+    background: var(--fog);
+    color: var(--night);
+    padding: clamp(88px, 12vw, 160px) clamp(20px, 4vw, 64px) clamp(72px, 9vw, 120px);
+  }
+  .about__inner {
+    display: grid;
+    gap: clamp(40px, 6vw, 96px);
+    max-width: 1240px;
+    margin: 0 auto;
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .about__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  }
+
+  /* Portrait: the full-colour cutout on a soft mist panel */
+  .about__portrait { position: relative; margin: 0; display: grid; }
+  .about__portrait-bg {
+    position: absolute;
+    inset: 18% 0 0 0;
+    border-radius: 999px 999px 18px 18px;
+    background: linear-gradient(180deg, var(--mist), #b4c3cd);
+  }
+  .about__portrait img { position: relative; width: 100%; height: auto; display: block; border-radius: 0 0 18px 18px; }
+  .about__portrait figcaption { margin-top: 14px; color: var(--muted-light, #4f5a63); }
+
+  .about__kicker { display: flex; align-items: center; gap: 10px; color: var(--accent-ink); }
+  .about__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-ink); }
+  .about__statement {
+    margin: 18px 0 0;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: var(--fs-6);
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .about__statement :global(em) { font-style: italic; color: var(--accent-ink); }
+  .about__bio {
+    display: grid;
+    gap: 1em;
+    margin-top: clamp(24px, 3vw, 36px);
+    max-width: 58ch;
+    font-size: var(--fs-0);
+    line-height: 1.65;
+    color: #2a333b;
+  }
+  .about__personal { color: #4f5a63; }
+
+  .about__facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    margin: clamp(28px, 3vw, 40px) 0 0;
+    border-top: 1px solid rgba(12, 16, 20, 0.14);
+  }
+  .about__facts div { padding: 14px 16px 14px 0; border-bottom: 1px solid rgba(12, 16, 20, 0.14); }
+  .about__facts dt { color: #4f5a63; }
+  .about__facts dd { margin: 4px 0 0; font-size: var(--type-small); }
+
+  .about__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: clamp(28px, 3vw, 40px); }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 24px;
+    border-radius: 999px;
+    border: 1px solid rgba(12, 16, 20, 0.3);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: background 0.3s, color 0.3s, border-color 0.3s;
+  }
+  .btn:hover { background: var(--night); color: var(--fog); border-color: var(--night); }
+  .btn--dark { background: var(--night); color: var(--fog); border-color: var(--night); }
+  .btn--dark:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+  .about__link { font-size: var(--type-small); border-bottom: 1px solid rgba(12, 16, 20, 0.35); }
+  .about__link:hover { color: var(--accent-ink); border-color: var(--accent-ink); }
+
+  /* Results */
+  .about__results { max-width: 1240px; margin: clamp(72px, 9vw, 120px) auto 0; }
+  .about__results-title { color: #4f5a63; }
+  .about__results ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 18px; border-top: 1px solid rgba(12, 16, 20, 0.14); }
+  .about__results li { display: grid; gap: 6px; padding: 24px 20px 24px 0; border-bottom: 1px solid rgba(12, 16, 20, 0.14); }
+  .about__value { font-family: var(--font-display); font-weight: 300; font-size: var(--fs-6); line-height: 0.9; }
+  .about__what { font-size: var(--fs-0); }
+  .about__where { color: #4f5a63; }
+
+  .about__tools { max-width: 1240px; margin: clamp(48px, 6vw, 72px) auto 0; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .about__tools .label { color: #4f5a63; }
+  .about__tools ul { display: flex; flex-wrap: wrap; gap: 8px; }
+  .about__tools li { padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(12, 16, 20, 0.18); font-size: var(--type-small); }
+
+  .ph { outline: 1px dashed currentColor; outline-offset: 3px; }
+  @media (max-width: 520px) {
+    .about__facts { grid-template-columns: 1fr; }
+  }
+</style>

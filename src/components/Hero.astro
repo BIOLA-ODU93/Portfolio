@@ -60,7 +60,7 @@ const email = site.email.replace(/[[\]]/g, '');
 
   <nav class="pill" aria-label="Main">
     {links.map((l) => <a class="pill__link" href={l.href}>{l.label}</a>)}
-    <a class="pill__cta" href={`mailto:${email}`}>Let’s talk</a>
+    <a class="pill__cta" href={`mailto:${email}`} data-contact-open>Let’s talk</a>
   </nav>
 </section>
 
@@ -69,7 +69,7 @@ const email = site.email.replace(/[[\]]/g, '');
   <nav aria-label="Menu">
     <ol>
       {links.map((l) => <li><a href={l.href} data-menu-link>{l.label}</a></li>)}
-      <li><a href={`mailto:${email}`}>Let’s talk</a></li>
+      <li><a href={`mailto:${email}`} data-contact-open>Let’s talk</a></li>
     </ol>
   </nav>
 </dialog>

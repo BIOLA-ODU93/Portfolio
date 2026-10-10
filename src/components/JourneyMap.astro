@@ -31,6 +31,7 @@ const rich = (s: string) =>
       <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 13L13 3M5 3h8v8" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
     </span>
   </span>
+  <span class="mapcard__mini" aria-hidden="true">3D<span class="mapcard__mini-dot"></span></span>
   <span class="visually-hidden">Open the 3D map of my journey from Nigeria to Dublin</span>
 </button>
 
@@ -189,6 +190,37 @@ const rich = (s: string) =>
   .mapcard:hover .mapcard__media img { transform: scale(1.07); filter: none; }
   .mapcard:hover .mapcard__go { background: var(--fog); color: var(--night); transform: rotate(45deg); }
   .mapcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+  /* Past the hero the card tucks into a small round "3D" button, so it never covers content */
+  .mapcard__mini { display: none; }
+  .mapcard:global(.is-compact) {
+    width: 56px;
+    padding: 0;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    place-items: center;
+  }
+  .mapcard:global(.is-compact) :is(.mapcard__media, .mapcard__caption) { display: none; }
+  .mapcard:global(.is-compact) .mapcard__mini {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-display);
+    font-size: 19px;
+  }
+  .mapcard__mini-dot {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #f2c22e;
+    animation: card-pulse 2.4s ease-out infinite;
+  }
+  .mapcard:global(.is-compact):hover { transform: translateY(-3px) scale(1.04); }
 
   /* ── Full-screen map ── */
   .jmap {
@@ -424,6 +456,7 @@ const rich = (s: string) =>
   .jmap:global(.is-static) .jcard { position: relative; opacity: 1; visibility: visible; transform: none; }
 
   /* Phones: a compact card, lifted above the floating pill menu */
+  @media (max-width: 640px) { .mapcard:global(.is-compact) { bottom: 20px; } }
   @media (max-width: 640px) {
     .mapcard { width: 140px; right: 12px; bottom: 96px; }
     .mapcard__meta { display: none; }
@@ -443,4 +476,11 @@ const rich = (s: string) =>
 <script>
   import { initJourney } from '../scripts/journey';
   initJourney();
+
+  // Tuck the corner card into a small "3D" button once the hero has scrolled away
+  const card = document.querySelector<HTMLElement>('.mapcard');
+  const hero = document.getElementById('top');
+  if (card && hero) {
+    new IntersectionObserver(([e]) => card.classList.toggle('is-compact', !e.isIntersecting), { threshold: 0.35 }).observe(hero);
+  }
 </script>

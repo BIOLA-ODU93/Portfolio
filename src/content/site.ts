@@ -11,8 +11,13 @@ export const site = {
   roles: 'Product Designer | Graphic Designer',
   location: 'Dublin, Ireland',
   tagline: 'Design that does more.',
-  // ⚠️ Replace with your real email address.
-  email: '[you@yourdomain.com]',
+  email: 'abiolaoduyemi@outlook.com',
+  // Used by "Let's talk": phone for Call, the same number for WhatsApp (digits only, with country code)
+  phone: '+353 87 000 6960',
+  whatsapp: '353870006960',
+  whatsappMessage: 'Hi Biola, I saw your portfolio and would love to chat.',
+  linkedin: 'https://www.linkedin.com/in/abiolaoduyemi',
+  cv: '/abiola-oduyemi-cv.pdf',
   description:
     'Portfolio of Abiola (Biola) Oduyemi — product designer and graphic designer based in Dublin, designing web and mobile products for fintech and B2B.',
 };
@@ -48,6 +53,35 @@ export const projects = [
     href: '',
   },
 ];
+
+/**
+ * ABOUT ME — written from your CV. Edit freely; keep it in your own voice.
+ * `personal` is optional — one line about you outside design (leave '' to hide).
+ */
+export const about = {
+  kicker: 'About me',
+  statement: 'I design products people *understand at first glance*.',
+  bio: [
+    'I’m Abiola Oduyemi (Biola), a product designer based in Dublin. Since 2022 I’ve designed web and mobile products across fintech, B2B data platforms and e-commerce, from Lagos to Dublin.',
+    'I started in mass communication, which taught me how a message lands with people. Design became how I put that to work: listening to users, mapping the messy parts, and turning them into flows and interfaces that feel obvious.',
+    'Today I lead design end to end at Gontrel, from interviews and journey maps to prototypes, UI and the specs engineers build from. I hold an MSc in Interactive Digital Media from Griffith College Dublin.',
+  ],
+  personal: '[Outside design: one line about you, e.g. what you do on weekends or what drives you]',
+  facts: [
+    { label: 'Based in', value: 'Dublin, Ireland' },
+    { label: 'Focus', value: 'Product design · UX research · Design systems' },
+    { label: 'Domains', value: 'Fintech · B2B data · E-commerce' },
+    { label: 'Education', value: 'MSc Interactive Digital Media, Griffith College Dublin' },
+  ],
+  results: [
+    { value: '~40%', label: 'less workflow friction', where: 'Gontrel · B2B data product' },
+    { value: '~35%', label: 'fewer navigation errors', where: 'HNG · dashboards' },
+    { value: '~40%', label: 'fewer support tickets', where: 'Sky Capital · fintech' },
+    { value: '~50%', label: 'higher user retention', where: 'Sky Capital · fintech' },
+  ],
+  tools: ['Figma', 'Framer', 'Miro', 'Adobe XD', 'Sketch', 'Illustrator', 'Notion', 'Jira'],
+  portrait: { src: '/images/portrait-colour@1x.webp', src2x: '/images/portrait-colour@2x.webp', alt: 'Abiola Oduyemi, smiling, in a striped shirt and patterned tie' },
+};
 
 /**
  * THE JOURNEY — the map section (from your CV).
@@ -178,7 +212,7 @@ export const journey = {
     {
       when: 'Jan – Mar 2025',
       title: 'HNG',
-      role: 'Product Designer · Remote',
+      role: 'Product Designer (Internship) · Remote',
       place: 'Dublin, Ireland',
       pos: [-6.2607, 53.3505],
       zoom: 15,
@@ -208,10 +242,11 @@ export const journey = {
       place: 'Dublin & online',
       pos: [-6.2607, 53.3505],
       zoom: 13.5,
-      points: ['Luciana — AI virtual try-on for premium fashion.', 'Ansarr — two-sided research marketplace.', 'Praisetival Ireland — worship & events platform.'],
+      points: ['Luciana — AI virtual try-on for premium fashion.', 'Ansarr — two-sided research marketplace.', 'Teel — payment experience for restaurant merchants.', 'Praisetival Ireland — worship & events platform.'],
       links: [
         { label: 'shop-luciana.co', href: 'https://shop-luciana.co' },
         { label: 'ansarr.com', href: 'https://ansarr.com' },
+        { label: 'teel.ie', href: 'https://teel.ie' },
         { label: 'praisetivalireland.ie', href: 'https://praisetivalireland.ie' },
       ],
     },
