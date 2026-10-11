@@ -80,10 +80,10 @@ export const about = {
   focus: 'Pretty screens are easy. I care about the ones that *change the numbers.*',
   resultsLabel: 'What changed',
   results: [
-    { value: '~40%', label: 'less workflow friction', where: 'Gontrel · B2B data product' },
-    { value: '~35%', label: 'fewer navigation errors', where: 'HNG · dashboards' },
-    { value: '~40%', label: 'fewer support tickets', where: 'Sky Capital · fintech' },
-    { value: '~50%', label: 'higher user retention', where: 'Sky Capital · fintech' },
+    { value: '40%', label: 'less workflow friction', where: 'Gontrel · B2B data product' },
+    { value: '35%', label: 'fewer navigation errors', where: 'HNG · dashboards' },
+    { value: '40%', label: 'fewer support tickets', where: 'Sky Capital · fintech' },
+    { value: '50%', label: 'higher user retention', where: 'Sky Capital · fintech' },
   ],
   best: {
     label: 'How I work',
