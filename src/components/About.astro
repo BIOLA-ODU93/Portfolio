@@ -1,168 +1,270 @@
 ---
 /**
- * About me — light section after the dark hero. Copy lives in site.ts (`about`).
+ * About me — one dark surface, a story in a fixed order (after marcuslorenzet.com/#about):
+ *   statement → [ my start ] → [ outside work ] → focus → [ proof ] → [ what I do best ]
+ * The two statements light up word by word as you scroll. Copy: site.ts (`about`).
  */
 import { about, site } from '../content/site';
 
-const rich = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/\[(.+?)\]/g, '<span class="ph">$1</span>');
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const ph = (s: string) => esc(s).replace(/\[(.+?)\]/g, '<span class="ph">$1</span>');
+/** Split a statement into word spans; *italic* runs become accent words. */
+const words = (s: string) => {
+  let italic = false;
+  return s
+    .split(/\s+/)
+    .map((w) => {
+      const starts = w.startsWith('*'), ends = w.endsWith('*') || w.endsWith('*.') || w.endsWith('*,');
+      if (starts) italic = true;
+      const clean = esc(w.replace(/\*/g, ''));
+      const html = `<span class="w${italic ? ' w--em' : ''}">${clean}</span>`;
+      if (ends) italic = false;
+      return html;
+    })
+    .join(' ');
+};
 ---
 
 <section id="about" class="about" aria-labelledby="about-title">
-  <div class="about__inner">
-    <figure class="about__portrait">
-      <span class="about__portrait-bg" aria-hidden="true"></span>
+  <!-- 1 · Statement -->
+  <h2 id="about-title" class="about__statement" data-words set:html={words(about.statement)} />
+
+  <!-- 2 · My start -->
+  <div class="about__row about__start">
+    <figure class="about__photo">
       <img
-        src={about.portrait.src}
-        srcset={`${about.portrait.src} 1x, ${about.portrait.src2x} 2x`}
-        alt={about.portrait.alt}
+        src={about.start.portrait.src}
+        srcset={`${about.start.portrait.src} 1x, ${about.start.portrait.src2x} 2x`}
+        alt={about.start.portrait.alt}
         width="812"
         height="977"
         loading="lazy"
         decoding="async"
       />
-      <figcaption class="label">{site.name} · {site.location}</figcaption>
     </figure>
-
-    <div class="about__copy">
-      <p class="label about__kicker"><span class="about__dot" aria-hidden="true"></span>{about.kicker}</p>
-      <h2 id="about-title" class="about__statement" set:html={rich(about.statement)} />
-      <div class="about__bio">
-        {about.bio.map((p) => <p set:html={rich(p)} />)}
-        {about.personal && <p class="about__personal" set:html={rich(about.personal)} />}
-      </div>
-
-      <dl class="about__facts">
-        {about.facts.map((f) => (
-          <div><dt class="label">{f.label}</dt><dd>{f.value}</dd></div>
-        ))}
-      </dl>
-
-      <div class="about__actions">
-        <button class="btn btn--dark" type="button" data-contact-open>Let’s talk</button>
-        <a class="btn" href={site.cv} download>Download CV ↓</a>
-        <a class="about__link" href={site.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>
-      </div>
-    </div>
+    <p class="about__text" set:html={ph(about.start.text)} />
+    <p class="tag">[ {about.start.label} ]</p>
   </div>
 
-  <div class="about__results">
-    <p class="label about__results-title">Results from shipped work</p>
-    <ul>
-      {about.results.map((r) => (
+  <!-- 3 · Outside work -->
+  <div class="about__row about__outside">
+    <div class="about__outside-copy">
+      <p class="tag">[ {about.outside.label} ]</p>
+      <p class="about__text" set:html={ph(about.outside.text)} />
+    </div>
+    <ul class="about__strip" data-lenis-prevent-wheel>
+      {about.outside.photos.map((p) => (
         <li>
-          <span class="about__value">{r.value}</span>
-          <span class="about__what">{r.label}</span>
-          <span class="label about__where">{r.where}</span>
+          <figure>
+            {p.src ? (
+              <img src={p.src} alt={p.alt} loading="lazy" decoding="async" />
+            ) : (
+              <span class="about__ph" role="img" aria-label={`Photo placeholder: ${p.alt.replace(/[[\]]/g, '')}`}>
+                <span class="tag">Photo</span>
+                <span set:html={ph(p.alt)} />
+              </span>
+            )}
+            <figcaption class="tag" set:html={ph(p.caption)} />
+          </figure>
         </li>
       ))}
     </ul>
   </div>
 
-  <div class="about__tools">
-    <p class="label">Tools I work with</p>
-    <ul>{about.tools.map((t) => <li>{t}</li>)}</ul>
+  <!-- 4 · Focus -->
+  <p class="about__statement about__statement--focus" data-words set:html={words(about.focus)} />
+
+  <!-- 5 · Proof -->
+  <div class="about__proof">
+    <p class="tag">[ Proof ]</p>
+    <ul>
+      {about.results.map((r) => (
+        <li>
+          <span class="about__value">{r.value}</span>
+          <span class="about__what">{r.label}</span>
+          <span class="tag about__where">{r.where}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <!-- 6 · What I do best -->
+  <div class="about__row about__best">
+    <div>
+      <p class="tag">[ {about.best.label} ]</p>
+      <p class="about__skills">{about.best.skills}</p>
+    </div>
+    <p class="about__text about__best-story">{about.best.story}</p>
+  </div>
+  <div class="about__row about__now">
+    <p class="about__now-text">{about.best.now}</p>
+    <div class="about__actions">
+      <a class="about__cta" href={site.cv} download>Download CV ↓</a>
+      <button class="about__cta about__cta--solid" type="button" data-contact-open>Let’s talk</button>
+    </div>
   </div>
 </section>
 
 <style>
   .about {
-    background: var(--fog);
-    color: var(--night);
-    padding: clamp(88px, 12vw, 160px) clamp(20px, 4vw, 64px) clamp(72px, 9vw, 120px);
+    --line: rgba(232, 236, 238, 0.12);
+    --dim: rgba(232, 236, 238, 0.6);
+    background: var(--night);
+    color: var(--fog);
+    padding: clamp(96px, 12vw, 180px) clamp(20px, 4vw, 64px) clamp(96px, 10vw, 160px);
+    border-top: 1px solid var(--line);
   }
-  .about__inner {
-    display: grid;
-    gap: clamp(40px, 6vw, 96px);
-    max-width: 1240px;
-    margin: 0 auto;
-    align-items: center;
-  }
-  @media (min-width: 900px) {
-    .about__inner { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .about > * { max-width: 1280px; margin-left: auto; margin-right: auto; }
+
+  .tag {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--dim);
   }
 
-  /* Portrait: the full-colour cutout on a soft mist panel */
-  .about__portrait { position: relative; margin: 0; display: grid; }
-  .about__portrait-bg {
-    position: absolute;
-    inset: 18% 0 0 0;
-    border-radius: 999px 999px 18px 18px;
-    background: linear-gradient(180deg, var(--mist), #b4c3cd);
-  }
-  .about__portrait img { position: relative; width: 100%; height: auto; display: block; border-radius: 0 0 18px 18px; }
-  .about__portrait figcaption { margin-top: 14px; color: var(--muted-light, #4f5a63); }
-
-  .about__kicker { display: flex; align-items: center; gap: 10px; color: var(--accent-ink); }
-  .about__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-ink); }
+  /* Statements: light up word by word (driven by the script below) */
   .about__statement {
-    margin: 18px 0 0;
+    margin-top: 0;
+    margin-bottom: 0;
     font-family: var(--font-display);
     font-weight: 300;
-    font-size: var(--fs-6);
-    line-height: 0.98;
-    letter-spacing: -0.01em;
+    font-size: clamp(2.6rem, 1rem + 5.4vw, 6.6rem);
+    line-height: 1;
+    letter-spacing: -0.015em;
     text-wrap: balance;
   }
-  .about__statement :global(em) { font-style: italic; color: var(--accent-ink); }
-  .about__bio {
-    display: grid;
-    gap: 1em;
-    margin-top: clamp(24px, 3vw, 36px);
-    max-width: 58ch;
-    font-size: var(--fs-0);
-    line-height: 1.65;
-    color: #2a333b;
-  }
-  .about__personal { color: #4f5a63; }
+  .about__statement :global(.w) { opacity: var(--o, 1); transition: opacity 0.25s linear; }
+  .about__statement :global(.w--em) { font-style: italic; color: var(--mist); }
+  :global(html.js) .about__statement :global(.w) { --o: 0.16; }
+  .about__statement--focus { margin-top: clamp(120px, 14vw, 200px); }
 
-  .about__facts {
+  .about__row {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 24px;
-    margin: clamp(28px, 3vw, 40px) 0 0;
-    border-top: 1px solid rgba(12, 16, 20, 0.14);
+    gap: clamp(28px, 4vw, 56px);
+    margin-top: clamp(72px, 9vw, 128px);
   }
-  .about__facts div { padding: 14px 16px 14px 0; border-bottom: 1px solid rgba(12, 16, 20, 0.14); }
-  .about__facts dt { color: #4f5a63; }
-  .about__facts dd { margin: 4px 0 0; font-size: var(--type-small); }
+  .about__text { margin: 0; max-width: 46ch; font-size: var(--fs-1); line-height: 1.5; color: rgba(232, 236, 238, 0.82); }
 
-  .about__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: clamp(28px, 3vw, 40px); }
-  .btn {
+  /* My start: photo · story · label */
+  .about__photo {
+    margin: 0;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #27323b, #151b21);
+  }
+  .about__photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+  @media (max-width: 899px) { .about__photo { max-width: 360px; aspect-ratio: 1; } }
+  @media (min-width: 900px) {
+    .about__start { grid-template-columns: 4fr 1fr 6fr 2fr; align-items: start; }
+    .about__start .about__photo { grid-column: 1; }
+    .about__start .about__text { grid-column: 3; }
+    .about__start .tag { grid-column: 4; text-align: right; }
+  }
+
+  /* Outside work: copy + photo strip */
+  .about__outside { padding-top: clamp(48px, 6vw, 80px); border-top: 1px solid var(--line); }
+  .about__outside-copy { display: grid; gap: 16px; align-content: start; }
+  .about__strip { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; scrollbar-width: thin; }
+  .about__strip li { flex: 0 0 clamp(220px, 26vw, 320px); scroll-snap-align: start; }
+  .about__strip figure { margin: 0; display: grid; gap: 10px; }
+  .about__strip img, .about__ph { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; }
+  .about__ph {
+    display: grid;
+    place-content: center;
+    gap: 6px;
+    text-align: center;
+    padding: 16px;
+    border: 1px dashed rgba(232, 236, 238, 0.25);
+    background: rgba(232, 236, 238, 0.03);
+    color: var(--dim);
+    font-size: var(--type-small);
+  }
+  @media (min-width: 900px) {
+    .about__outside { grid-template-columns: 4fr 9fr; align-items: start; }
+    .about__outside-copy { border-right: 1px solid var(--line); padding-right: 28px; }
+  }
+
+  /* Proof */
+  .about__proof { margin-top: clamp(64px, 7vw, 96px); }
+  .about__proof ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 18px; border-top: 1px solid var(--line); }
+  .about__proof li { display: grid; align-content: start; gap: 6px; padding: 24px 20px 24px 0; border-bottom: 1px solid var(--line); }
+  .about__value { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.6rem, 1.6rem + 3vw, 4.6rem); line-height: 0.9; }
+  .about__what { font-size: var(--fs-0); }
+  @media (max-width: 560px) {
+    .about__proof ul { grid-template-columns: 1fr 1fr; }
+    .about__proof li { padding: 20px 12px 20px 0; }
+    .about__what { font-size: var(--type-small); }
+  }
+
+  /* What I do best */
+  .about__skills { margin: 16px 0 0; max-width: 48ch; font-size: var(--type-small); line-height: 1.6; color: var(--dim); }
+  @media (min-width: 900px) {
+    .about__best { grid-template-columns: 1fr 1fr; align-items: end; }
+    .about__best-story { justify-self: end; }
+  }
+  .about__now {
+    padding-top: clamp(28px, 3vw, 40px);
+    border-top: 1px solid var(--line);
+    align-items: center;
+  }
+  .about__now-text { margin: 0; max-width: 40ch; color: var(--dim); }
+  @media (min-width: 900px) { .about__now { grid-template-columns: 1fr auto; } }
+  .about__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .about__cta {
     display: inline-flex;
     align-items: center;
     min-height: 48px;
     padding: 0 24px;
     border-radius: 999px;
-    border: 1px solid rgba(12, 16, 20, 0.3);
+    border: 1px solid rgba(232, 236, 238, 0.3);
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     transition: background 0.3s, color 0.3s, border-color 0.3s;
   }
-  .btn:hover { background: var(--night); color: var(--fog); border-color: var(--night); }
-  .btn--dark { background: var(--night); color: var(--fog); border-color: var(--night); }
-  .btn--dark:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
-  .about__link { font-size: var(--type-small); border-bottom: 1px solid rgba(12, 16, 20, 0.35); }
-  .about__link:hover { color: var(--accent-ink); border-color: var(--accent-ink); }
-
-  /* Results */
-  .about__results { max-width: 1240px; margin: clamp(72px, 9vw, 120px) auto 0; }
-  .about__results-title { color: #4f5a63; }
-  .about__results ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 18px; border-top: 1px solid rgba(12, 16, 20, 0.14); }
-  .about__results li { display: grid; gap: 6px; padding: 24px 20px 24px 0; border-bottom: 1px solid rgba(12, 16, 20, 0.14); }
-  .about__value { font-family: var(--font-display); font-weight: 300; font-size: var(--fs-6); line-height: 0.9; }
-  .about__what { font-size: var(--fs-0); }
-  .about__where { color: #4f5a63; }
-
-  .about__tools { max-width: 1240px; margin: clamp(48px, 6vw, 72px) auto 0; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
-  .about__tools .label { color: #4f5a63; }
-  .about__tools ul { display: flex; flex-wrap: wrap; gap: 8px; }
-  .about__tools li { padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(12, 16, 20, 0.18); font-size: var(--type-small); }
+  .about__cta:hover { background: var(--fog); color: var(--night); border-color: var(--fog); }
+  .about__cta--solid { background: var(--fog); color: var(--night); border-color: var(--fog); }
+  .about__cta--solid:hover { background: var(--accent); border-color: var(--accent); }
 
   .ph { outline: 1px dashed currentColor; outline-offset: 3px; }
-  @media (max-width: 520px) {
-    .about__facts { grid-template-columns: 1fr; }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .about__statement :global(.w) { --o: 1; }
   }
 </style>
+
+<script>
+  // Light the statements up word by word as they scroll through the viewport
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const blocks = Array.from(document.querySelectorAll<HTMLElement>('[data-words]')).map((el) => ({
+    el,
+    words: Array.from(el.querySelectorAll<HTMLElement>('.w')),
+    lit: -1,
+  }));
+  if (!reduce && blocks.length) {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const vh = window.innerHeight;
+      for (const b of blocks) {
+        const r = b.el.getBoundingClientRect();
+        // starts when the top reaches 85% of the screen, completes as it reaches ~35%
+        const progress = Math.min(1, Math.max(0, (vh * 0.85 - r.top) / (vh * 0.5 + r.height * 0.5)));
+        const lit = progress * b.words.length;
+        if (Math.abs(lit - b.lit) < 0.05) continue;
+        b.lit = lit;
+        b.words.forEach((w, i) => w.style.setProperty('--o', String(0.16 + 0.84 * Math.min(1, Math.max(0, lit - i)))));
+      }
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  } else {
+    blocks.forEach((b) => b.words.forEach((w) => w.style.setProperty('--o', '1')));
+  }
+</script>

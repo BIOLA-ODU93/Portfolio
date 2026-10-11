@@ -55,32 +55,40 @@ export const projects = [
 ];
 
 /**
- * ABOUT ME — written from your CV. Edit freely; keep it in your own voice.
- * `personal` is optional — one line about you outside design (leave '' to hide).
+ * ABOUT ME — a story in a fixed order (after marcuslorenzet.com/#about):
+ * statement → my start → outside work → focus → proof → what I do best.
+ * Wrap words in *asterisks* for the italic accent. [brackets] = placeholder.
  */
 export const about = {
-  kicker: 'About me',
-  statement: 'I design products people *understand at first glance*.',
-  bio: [
-    'I’m Abiola Oduyemi (Biola), a product designer based in Dublin. Since 2022 I’ve designed web and mobile products across fintech, B2B data platforms and e-commerce, from Lagos to Dublin.',
-    'I started in mass communication, which taught me how a message lands with people. Design became how I put that to work: listening to users, mapping the messy parts, and turning them into flows and interfaces that feel obvious.',
-    'Today I lead design end to end at Gontrel, from interviews and journey maps to prototypes, UI and the specs engineers build from. I hold an MSc in Interactive Digital Media from Griffith College Dublin.',
-  ],
-  personal: '[Outside design: one line about you, e.g. what you do on weekends or what drives you]',
-  facts: [
-    { label: 'Based in', value: 'Dublin, Ireland' },
-    { label: 'Focus', value: 'Product design · UX research · Design systems' },
-    { label: 'Domains', value: 'Fintech · B2B data · E-commerce' },
-    { label: 'Education', value: 'MSc Interactive Digital Media, Griffith College Dublin' },
-  ],
+  statement: 'I’m Biola, a product designer who turns complex products into experiences people *understand at first glance.*',
+  start: {
+    label: 'My start',
+    text: 'My journey started in mass communication at Babcock University, learning how a message lands with people. In 2019 I picked up design in Ikeja, brand identity first, then UI/UX, and by 2022 I was designing fintech products at Sky Capital in Lagos. In 2024 I moved to Dublin for an MSc in Interactive Digital Media.',
+    portrait: { src: '/images/portrait-colour@1x.webp', src2x: '/images/portrait-colour@2x.webp', alt: 'Abiola Oduyemi in a striped shirt and patterned tie' },
+  },
+  outside: {
+    label: 'Outside work',
+    text: '[One or two lines about you outside design: what you do on weekends, what drives you, a small story people remember.]',
+    // Photos for the strip. Leave src '' for a labelled placeholder.
+    photos: [
+      { src: '/images/desk.jpg', alt: 'My desk in Dublin', caption: 'My desk, Dublin' },
+      { src: '', alt: '[Photo of you outside work]', caption: '[Caption]' },
+      { src: '', alt: '[Photo from Lagos or home]', caption: '[Caption]' },
+    ],
+  },
+  focus: 'Today my focus is clear: products where clarity *shows up in the numbers,* fewer tickets, faster workflows, users who stay.',
   results: [
     { value: '~40%', label: 'less workflow friction', where: 'Gontrel · B2B data product' },
     { value: '~35%', label: 'fewer navigation errors', where: 'HNG · dashboards' },
     { value: '~40%', label: 'fewer support tickets', where: 'Sky Capital · fintech' },
     { value: '~50%', label: 'higher user retention', where: 'Sky Capital · fintech' },
   ],
-  tools: ['Figma', 'Framer', 'Miro', 'Adobe XD', 'Sketch', 'Illustrator', 'Notion', 'Jira'],
-  portrait: { src: '/images/portrait-colour@1x.webp', src2x: '/images/portrait-colour@2x.webp', alt: 'Abiola Oduyemi, smiling, in a striped shirt and patterned tie' },
+  best: {
+    label: 'What I do best',
+    skills: 'UX research, user flows, journey mapping, interaction design, UI design, prototyping, usability testing, design systems, dashboards, web & mobile, Figma, Framer, brand & visual design.',
+    story: 'Over the years I moved from brand and graphics into product design: research, flows, prototypes and the systems that keep them consistent.',
+    now: 'Currently leading end-to-end design at Gontrel, a data-centric B2B product in Dublin.',
+  },
 };
 
 /**
