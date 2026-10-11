@@ -82,10 +82,13 @@ const words = (s: string) => {
   <!-- 5 · Proof -->
   <div class="about__proof">
     <p class="tag">{about.resultsLabel}</p>
-    <ul>
-      {about.results.map((r) => (
-        <li>
-          <span class="about__value">{r.value}</span>
+    <ul data-count-up>
+      {about.results.map((r, i) => (
+        <li style={`--i: ${i}`}>
+          <span class="about__value">
+            <span aria-hidden="true" data-count={r.value}>{r.value}</span>
+            <span class="visually-hidden">{r.value}</span>
+          </span>
           <span class="about__what">{r.label}</span>
           <span class="tag about__where">{r.where}</span>
         </li>
@@ -219,6 +222,15 @@ const words = (s: string) => {
   .about__proof li { display: grid; align-content: start; gap: 6px; padding: 24px 20px 24px 0; border-bottom: 1px solid var(--line); }
   .about__value { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(2.2rem, 1.5rem + 2vw, 3.5rem); line-height: 0.95; letter-spacing: -0.04em; }
   .about__what { font-size: var(--fs-0); }
+  /* numbers fade up one after another, then count to their value (script below) */
+  :global(html.js) .about__proof li {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+    transition-delay: calc(var(--i) * 140ms);
+  }
+  :global(html.js) .about__proof :global(.is-in) li { opacity: 1; transform: none; }
+  .about__value [data-count] { font-variant-numeric: tabular-nums; }
   @media (max-width: 560px) {
     .about__proof ul { grid-template-columns: 1fr 1fr; }
     .about__proof li { padding: 20px 12px 20px 0; }
@@ -259,6 +271,7 @@ const words = (s: string) => {
   .ph { outline: 1px dashed currentColor; outline-offset: 3px; }
   @media (prefers-reduced-motion: reduce) {
     :global(html.js) .about__statement :global(.w) { --o: 1; }
+    :global(html.js) .about__proof li { opacity: 1; transform: none; }
     /* no drift: one copy of the photos, scrollable by hand */
     .about__strip { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
     .about__track { animation: none; }
@@ -295,5 +308,30 @@ const words = (s: string) => {
     update();
   } else {
     blocks.forEach((b) => b.words.forEach((w) => w.style.setProperty('--o', '1')));
+  }
+
+  // "What changed": fade the results in and roll each number up from zero, once
+  const list = document.querySelector<HTMLElement>('[data-count-up]');
+  if (list && !reduce) {
+    const nums = Array.from(list.querySelectorAll<HTMLElement>('[data-count]')).map((el) => {
+      const [, pre, n, post] = el.dataset.count!.match(/^(\D*)(\d+)(.*)$/) ?? [];
+      if (n) el.textContent = `${pre}0${post}`;
+      return { el, pre, n: Number(n), post };
+    });
+    new IntersectionObserver((entries, io) => {
+      if (!entries[0].isIntersecting) return;
+      io.disconnect();
+      list.classList.add('is-in');
+      nums.forEach(({ el, pre, n, post }, i) => {
+        if (!n) return;
+        const start = performance.now() + i * 140, dur = 1400;
+        const tick = (now: number) => {
+          const t = Math.min(1, Math.max(0, (now - start) / dur));
+          el.textContent = `${pre}${Math.round(n * (1 - Math.pow(1 - t, 3)))}${post}`;
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.4 }).observe(list);
   }
 </script>
