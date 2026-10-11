@@ -3,9 +3,9 @@
    ───────────────────────────────────────────────────────────── */
 :root {
   /* ── Palette: cool, quiet, low-saturation ── */
-  --fog: #e8ecee;           /* light sections */
+  --fog: #dfe5e8;           /* text on dark — a soft off-white, not pure white */
   --fog-2: #dbe1e5;
-  --night: #0c1014;         /* dark sections, text */
+  --night: #0b0e12;         /* page background */
   --night-2: #151b21;
   --night-3: #1d252d;
   --mist: #c5d2db;          /* closing section */
@@ -13,7 +13,8 @@
   --accent-ink: #34566e;    /* accent dark enough for text on fog (≥ 6:1) */
 
   /* ── Type families ── */
-  --font-display: 'Cormorant Garamond', 'Cormorant', Georgia, serif;
+  --font-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --fw-display: 400;
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* ── Fluid modular type scale ──
@@ -43,7 +44,7 @@
   --leading-tight: 0.95;
   --leading-snug: 1.2;
   --leading-body: 1.6;
-  --tracking-display: -0.01em;
+  --tracking-display: -0.035em;
   --tracking-label: 0.16em;
 
   /* ── Space & layout ── */

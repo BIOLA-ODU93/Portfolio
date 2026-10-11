@@ -8,17 +8,17 @@ import { about, site } from '../content/site';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const ph = (s: string) => esc(s).replace(/\[(.+?)\]/g, '<span class="ph">$1</span>');
-/** Split a statement into word spans; *italic* runs become accent words. */
+/** Split a statement into word spans; *starred* runs become accent-coloured words. */
 const words = (s: string) => {
-  let italic = false;
+  let accent = false;
   return s
     .split(/\s+/)
     .map((w) => {
       const starts = w.startsWith('*'), ends = w.endsWith('*') || w.endsWith('*.') || w.endsWith('*,');
-      if (starts) italic = true;
+      if (starts) accent = true;
       const clean = esc(w.replace(/\*/g, ''));
-      const html = `<span class="w${italic ? ' w--em' : ''}">${clean}</span>`;
-      if (ends) italic = false;
+      const html = `<span class="w${accent ? ' w--em' : ''}">${clean}</span>`;
+      if (ends) accent = false;
       return html;
     })
     .join(' ');
@@ -130,14 +130,14 @@ const words = (s: string) => {
     margin-top: 0;
     margin-bottom: 0;
     font-family: var(--font-display);
-    font-weight: 300;
-    font-size: clamp(2.6rem, 1rem + 5.4vw, 6.6rem);
-    line-height: 1;
-    letter-spacing: -0.015em;
+    font-weight: var(--fw-display);
+    font-size: clamp(2.4rem, 0.9rem + 5vw, 6rem);
+    line-height: 1.02;
+    letter-spacing: var(--tracking-display);
     text-wrap: balance;
   }
   .about__statement :global(.w) { opacity: var(--o, 1); transition: opacity 0.25s linear; }
-  .about__statement :global(.w--em) { font-style: italic; color: var(--mist); }
+  .about__statement :global(.w--em) { color: var(--accent); }
   :global(html.js) .about__statement :global(.w) { --o: 0.16; }
   .about__statement--focus { margin-top: clamp(120px, 14vw, 200px); }
 
@@ -192,7 +192,7 @@ const words = (s: string) => {
   .about__proof { margin-top: clamp(64px, 7vw, 96px); }
   .about__proof ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 18px; border-top: 1px solid var(--line); }
   .about__proof li { display: grid; align-content: start; gap: 6px; padding: 24px 20px 24px 0; border-bottom: 1px solid var(--line); }
-  .about__value { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.6rem, 1.6rem + 3vw, 4.6rem); line-height: 0.9; }
+  .about__value { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(2.4rem, 1.5rem + 2.8vw, 4.2rem); line-height: 0.95; letter-spacing: -0.04em; }
   .about__what { font-size: var(--fs-0); }
   @media (max-width: 560px) {
     .about__proof ul { grid-template-columns: 1fr 1fr; }

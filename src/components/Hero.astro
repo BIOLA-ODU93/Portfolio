@@ -243,7 +243,7 @@ const email = site.email.replace(/[[\]]/g, '');
     display: grid;
     justify-items: center;
     margin: 0;
-    font-weight: 300;
+    font-weight: var(--fw-display);
     text-align: center;
   }
   .hero__script {
@@ -255,7 +255,7 @@ const email = site.email.replace(/[[\]]/g, '');
     font-family: var(--font-display);
     font-size: var(--fs-4);
     line-height: 1;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
     text-transform: uppercase;
   }
 
@@ -331,13 +331,14 @@ const email = site.email.replace(/[[\]]/g, '');
   .menu ol { margin-top: 10vh; display: grid; gap: 8px; }
   .menu a {
     font-family: var(--font-display);
-    font-weight: 300;
+    font-weight: var(--fw-display);
     font-size: var(--fs-6);
-    line-height: 1.1;
+    line-height: 1.05;
+    letter-spacing: var(--tracking-display);
     transition: color 0.25s;
   }
   .menu a:hover,
-  .menu a:focus-visible { color: var(--accent); font-style: italic; }
+  .menu a:focus-visible { color: var(--accent); }
 
   @media (max-width: 480px) {
     .pill { bottom: 24px; }

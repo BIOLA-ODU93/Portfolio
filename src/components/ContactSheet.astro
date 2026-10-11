@@ -84,8 +84,8 @@ const mail = `mailto:${site.email}?subject=${encodeURIComponent('Hello from your
   }
   .talk__head { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 20px; }
   .talk__kicker { color: var(--mist); }
-  .talk__title { margin: 8px 0 0; font-family: var(--font-display); font-weight: 300; font-size: var(--fs-3); line-height: 1.05; }
-  .talk__title em { font-style: italic; color: var(--accent); }
+  .talk__title { margin: 8px 0 0; font-family: var(--font-display); font-weight: var(--fw-display); font-size: var(--fs-3); line-height: 1.05; letter-spacing: var(--tracking-display); }
+  .talk__title em { font-style: normal; color: var(--accent); }
   .talk__close {
     flex: none;
     display: grid;
@@ -126,7 +126,7 @@ const mail = `mailto:${site.email}?subject=${encodeURIComponent('Hello from your
   .talk__icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
   .talk__icon--wa { background: #25d366; color: #06231a; }
   .talk__text { display: grid; gap: 2px; min-width: 0; }
-  .talk__name { font-family: var(--font-display); font-size: var(--fs-1); line-height: 1.1; }
+  .talk__name { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-1); line-height: 1.1; letter-spacing: -0.02em; }
   .talk__detail { font-size: var(--type-small); color: rgba(232, 236, 238, 0.65); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .talk__arrow { margin-left: auto; color: rgba(232, 236, 238, 0.6); }
   .talk__copy {

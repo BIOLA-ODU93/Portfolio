@@ -57,7 +57,7 @@ export const projects = [
 /**
  * ABOUT ME — a story in a fixed order (after marcuslorenzet.com/#about):
  * statement → my start → outside work → focus → proof → what I do best.
- * Wrap words in *asterisks* for the italic accent. [brackets] = placeholder.
+ * Wrap words in *asterisks* for the accent colour. [brackets] = placeholder.
  */
 export const about = {
   statement: 'I’m Biola, a product designer who turns complex products into experiences people *understand at first glance.*',
