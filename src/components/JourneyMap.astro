@@ -25,7 +25,7 @@ const rich = (s: string) =>
   <span class="mapcard__caption">
     <span class="mapcard__text">
       <span class="mapcard__title">My journey</span>
-      <span class="mapcard__meta">Lagos → Dublin · 2014 – now</span>
+      <span class="mapcard__meta">Lagos → Dublin</span>
     </span>
     <span class="mapcard__go" aria-hidden="true">
       <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 13L13 3M5 3h8v8" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
@@ -108,7 +108,7 @@ const rich = (s: string) =>
     right: clamp(14px, 2vw, 28px);
     bottom: clamp(14px, 2vw, 28px);
     z-index: 40;
-    width: clamp(168px, 15vw, 228px);
+    width: clamp(200px, 16vw, 236px);
     display: grid;
     padding: 4px;
     text-align: left;
@@ -173,9 +173,9 @@ const rich = (s: string) =>
     gap: 10px;
     padding: 10px 8px 8px 8px;
   }
-  .mapcard__text { display: grid; gap: 3px; }
+  .mapcard__text { display: grid; gap: 3px; min-width: 0; } /* lets the caption shrink instead of pushing the arrow out */
   .mapcard__title { font-family: var(--font-display); font-size: 19px; line-height: 1; }
-  .mapcard__meta { font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; color: rgba(232, 236, 238, 0.6); }
+  .mapcard__meta { font-size: 9px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(232, 236, 238, 0.6); }
   .mapcard__go {
     display: grid;
     place-items: center;
