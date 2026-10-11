@@ -1,7 +1,8 @@
 ---
 /**
- * About me — one dark surface, a story in a fixed order (after marcuslorenzet.com/#about):
- *   statement → [ my start ] → [ outside work ] → focus → [ proof ] → [ what I do best ]
+ * About me — one dark surface, told in short numbered chapters:
+ *   statement → 01 where it began → 02 off the clock (auto-scrolling photos)
+ *   → line → what changed (numbers) → 03 how I work
  * The two statements light up word by word as you scroll. Copy: site.ts (`about`).
  */
 import { about, site } from '../content/site';
@@ -43,16 +44,18 @@ const words = (s: string) => {
       />
     </figure>
     <p class="about__text" set:html={ph(about.start.text)} />
-    <p class="tag">[ {about.start.label} ]</p>
+    <p class="tag"><span class="tag__n">01</span> {about.start.label}</p>
   </div>
 
   <!-- 3 · Outside work -->
   <div class="about__row about__outside">
     <div class="about__outside-copy">
-      <p class="tag">[ {about.outside.label} ]</p>
+      <p class="tag"><span class="tag__n">02</span> {about.outside.label}</p>
       <p class="about__text" set:html={ph(about.outside.text)} />
     </div>
-    <ul class="about__strip" data-lenis-prevent-wheel>
+    <div class="about__strip">
+      {[0, 1].map((copy) => (
+      <ul class="about__track" aria-hidden={copy ? 'true' : undefined}>
       {about.outside.photos.map((p) => (
         <li>
           <figure>
@@ -68,7 +71,9 @@ const words = (s: string) => {
           </figure>
         </li>
       ))}
-    </ul>
+      </ul>
+      ))}
+    </div>
   </div>
 
   <!-- 4 · Focus -->
@@ -76,7 +81,7 @@ const words = (s: string) => {
 
   <!-- 5 · Proof -->
   <div class="about__proof">
-    <p class="tag">[ Proof ]</p>
+    <p class="tag">{about.resultsLabel}</p>
     <ul>
       {about.results.map((r) => (
         <li>
@@ -91,7 +96,7 @@ const words = (s: string) => {
   <!-- 6 · What I do best -->
   <div class="about__row about__best">
     <div>
-      <p class="tag">[ {about.best.label} ]</p>
+      <p class="tag"><span class="tag__n">03</span> {about.best.label}</p>
       <p class="about__skills">{about.best.skills}</p>
     </div>
     <p class="about__text about__best-story">{about.best.story}</p>
@@ -124,6 +129,7 @@ const words = (s: string) => {
     text-transform: uppercase;
     color: var(--dim);
   }
+  .tag__n { margin-right: 10px; color: var(--accent); }
 
   /* Statements: light up word by word (driven by the script below) */
   .about__statement {
@@ -131,8 +137,9 @@ const words = (s: string) => {
     margin-bottom: 0;
     font-family: var(--font-display);
     font-weight: var(--fw-display);
-    font-size: clamp(2.4rem, 0.9rem + 5vw, 6rem);
-    line-height: 1.02;
+    padding-right: min(16vw, 240px); /* keep lines short without leaving the grid */
+    font-size: clamp(2rem, 1.1rem + 3.2vw, 4rem);
+    line-height: 1.08;
     letter-spacing: var(--tracking-display);
     text-wrap: balance;
   }
@@ -159,17 +166,34 @@ const words = (s: string) => {
   .about__photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
   @media (max-width: 899px) { .about__photo { max-width: 360px; aspect-ratio: 1; } }
   @media (min-width: 900px) {
-    .about__start { grid-template-columns: 4fr 1fr 6fr 2fr; align-items: start; }
+    .about__start { grid-template-columns: 4fr 1fr 6fr 2.4fr; align-items: start; }
     .about__start .about__photo { grid-column: 1; }
     .about__start .about__text { grid-column: 3; }
-    .about__start .tag { grid-column: 4; text-align: right; }
+    .about__start .tag { grid-column: 4; text-align: right; white-space: nowrap; }
   }
 
   /* Outside work: copy + photo strip */
   .about__outside { padding-top: clamp(48px, 6vw, 80px); border-top: 1px solid var(--line); }
   .about__outside-copy { display: grid; gap: 16px; align-content: start; }
-  .about__strip { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; scrollbar-width: thin; }
-  .about__strip li { flex: 0 0 clamp(220px, 26vw, 320px); scroll-snap-align: start; }
+  /* the photo strip drifts on its own; two copies of the list make the loop seamless */
+  .about__strip {
+    display: flex;
+    overflow: hidden;
+    min-width: 0;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+  .about__track {
+    flex: none;
+    display: flex;
+    gap: 16px;
+    padding-right: 16px;
+    animation: drift 45s linear infinite;
+  }
+  .about__strip:hover .about__track,
+  .about__strip:focus-within .about__track { animation-play-state: paused; }
+  @keyframes drift { to { transform: translateX(-100%); } }
+  .about__track li { flex: 0 0 clamp(200px, 22vw, 300px); }
   .about__strip figure { margin: 0; display: grid; gap: 10px; }
   .about__strip img, .about__ph { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; }
   .about__ph {
@@ -184,7 +208,8 @@ const words = (s: string) => {
     font-size: var(--type-small);
   }
   @media (min-width: 900px) {
-    .about__outside { grid-template-columns: 4fr 9fr; align-items: start; }
+    .about__outside { grid-template-columns: 5fr 8fr; align-items: center; }
+    .about__outside .about__text { font-size: var(--fs-0); line-height: 1.6; }
     .about__outside-copy { border-right: 1px solid var(--line); padding-right: 28px; }
   }
 
@@ -192,7 +217,7 @@ const words = (s: string) => {
   .about__proof { margin-top: clamp(64px, 7vw, 96px); }
   .about__proof ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 18px; border-top: 1px solid var(--line); }
   .about__proof li { display: grid; align-content: start; gap: 6px; padding: 24px 20px 24px 0; border-bottom: 1px solid var(--line); }
-  .about__value { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(2.4rem, 1.5rem + 2.8vw, 4.2rem); line-height: 0.95; letter-spacing: -0.04em; }
+  .about__value { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(2.2rem, 1.5rem + 2vw, 3.5rem); line-height: 0.95; letter-spacing: -0.04em; }
   .about__what { font-size: var(--fs-0); }
   @media (max-width: 560px) {
     .about__proof ul { grid-template-columns: 1fr 1fr; }
@@ -234,6 +259,10 @@ const words = (s: string) => {
   .ph { outline: 1px dashed currentColor; outline-offset: 3px; }
   @media (prefers-reduced-motion: reduce) {
     :global(html.js) .about__statement :global(.w) { --o: 1; }
+    /* no drift: one copy of the photos, scrollable by hand */
+    .about__strip { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+    .about__track { animation: none; }
+    .about__track[aria-hidden] { display: none; }
   }
 </style>
 

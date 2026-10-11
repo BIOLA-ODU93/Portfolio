@@ -55,28 +55,31 @@ export const projects = [
 ];
 
 /**
- * ABOUT ME — a story in a fixed order (after marcuslorenzet.com/#about):
- * statement → my start → outside work → focus → proof → what I do best.
+ * ABOUT ME — four short chapters, then the proof:
+ * statement → 01 where it began → 02 off the clock → line → what changed → 03 how I work.
  * Wrap words in *asterisks* for the accent colour. [brackets] = placeholder.
  */
 export const about = {
-  statement: 'I’m Biola, a product designer who turns complex products into experiences people *understand at first glance.*',
+  statement: 'Hi, I’m Biola. I take products that feel complicated and make them *feel obvious,* then I check the numbers to be sure.',
   start: {
-    label: 'My start',
-    text: 'My journey started in mass communication at Babcock University, learning how a message lands with people. In 2019 I picked up design in Ikeja, brand identity first, then UI/UX, and by 2022 I was designing fintech products at Sky Capital in Lagos. In 2024 I moved to Dublin for an MSc in Interactive Digital Media.',
+    label: 'Where it began',
+    text: 'I studied mass communication at Babcock University, and one lesson stuck: a message only works if people get it. In 2019 I started designing in Ikeja, brand identity first, then UI/UX. By 2022 I was building fintech products at Sky Capital in Lagos, and in 2024 I moved to Dublin for an MSc in Interactive Digital Media.',
     portrait: { src: '/images/portrait-colour@1x.webp', src2x: '/images/portrait-colour@2x.webp', alt: 'Abiola Oduyemi in a striped shirt and patterned tie' },
   },
   outside: {
-    label: 'Outside work',
-    text: '[One or two lines about you outside design: what you do on weekends, what drives you, a small story people remember.]',
-    // Photos for the strip. Leave src '' for a labelled placeholder.
+    label: 'Off the clock',
+    text: 'When I’m not designing, I’m behind a drum kit. A drummer keeps time for everyone else, and that’s taught me a lot about rhythm, timing and knowing when to hold back, which is most of good interface design too. The rest of the time, I’m out with friends.',
+    // Photos for the scrolling strip. Leave src '' for a labelled placeholder.
     photos: [
+      { src: '', alt: '[Photo: you on the drums]', caption: '[Behind the kit]' },
+      { src: '', alt: '[Photo: you with friends]', caption: '[With friends]' },
       { src: '/images/desk.jpg', alt: 'My desk in Dublin', caption: 'My desk, Dublin' },
-      { src: '', alt: '[Photo of you outside work]', caption: '[Caption]' },
-      { src: '', alt: '[Photo from Lagos or home]', caption: '[Caption]' },
+      { src: '', alt: '[Photo: drums or a gig]', caption: '[Caption]' },
+      { src: '', alt: '[Photo: a day out]', caption: '[Caption]' },
     ],
   },
-  focus: 'Today my focus is clear: products where clarity *shows up in the numbers,* fewer tickets, faster workflows, users who stay.',
+  focus: 'Pretty screens are easy. I care about the ones that *change the numbers.*',
+  resultsLabel: 'What changed',
   results: [
     { value: '~40%', label: 'less workflow friction', where: 'Gontrel · B2B data product' },
     { value: '~35%', label: 'fewer navigation errors', where: 'HNG · dashboards' },
@@ -84,9 +87,9 @@ export const about = {
     { value: '~50%', label: 'higher user retention', where: 'Sky Capital · fintech' },
   ],
   best: {
-    label: 'What I do best',
+    label: 'How I work',
     skills: 'UX research, user flows, journey mapping, interaction design, UI design, prototyping, usability testing, design systems, dashboards, web & mobile, Figma, Framer, brand & visual design.',
-    story: 'Over the years I moved from brand and graphics into product design: research, flows, prototypes and the systems that keep them consistent.',
+    story: 'Research first, then flows, prototypes and testing, and a design system so it all stays consistent after launch. My brand background means it looks right too.',
     now: 'Currently leading end-to-end design at Gontrel, a data-centric B2B product in Dublin.',
   },
 };
