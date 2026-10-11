@@ -71,11 +71,10 @@ export const about = {
     text: 'When I’m not designing, I’m behind a drum kit. A drummer keeps time for everyone else, and that’s taught me a lot about rhythm, timing and knowing when to hold back, which is most of good interface design too. The rest of the time, I’m out with friends.',
     // Photos for the scrolling strip. Leave src '' for a labelled placeholder.
     photos: [
-      { src: '', alt: '[Photo: you on the drums]', caption: '[Behind the kit]' },
-      { src: '', alt: '[Photo: you with friends]', caption: '[With friends]' },
+      { src: '/images/outside/drums.webp', alt: 'Biola playing drums on stage, in black and white', caption: 'Behind the kit' },
+      { src: '/images/outside/friends.webp', alt: 'Biola with two friends at a night out', caption: 'With friends' },
+      { src: '/images/outside/evening.webp', alt: 'Biola in a red number 18 jersey on a balcony at sunset', caption: 'Golden hour' },
       { src: '/images/desk.jpg', alt: 'My desk in Dublin', caption: 'My desk, Dublin' },
-      { src: '', alt: '[Photo: drums or a gig]', caption: '[Caption]' },
-      { src: '', alt: '[Photo: a day out]', caption: '[Caption]' },
     ],
   },
   focus: 'Pretty screens are easy. I care about the ones that *change the numbers.*',
