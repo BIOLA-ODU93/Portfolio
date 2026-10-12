@@ -226,13 +226,13 @@ export const journey = {
       ],
     },
     {
-      when: 'Jul 2026 – Now',
+      when: 'Jul 2025 – Now',
       title: 'King’s Court',
       role: 'Product & Graphic Designer',
       place: 'Dublin, Ireland',
       pos: [-6.2607, 53.3505],
       zoom: 15.6,
-      points: ['Monthly designs for church events and activities.', 'Leading the design of the church’s new website.'],
+      points: ['Leading the design of the organisation’s new website, from user flows to responsive UI.', 'Monthly campaigns and visual communications for its events and programmes.'],
     },
     {
       when: 'Now',
