@@ -211,7 +211,7 @@ export const journey = {
       points: ['Graduated in October 2025.'],
     },
     {
-      when: 'Jan 2025 – Jun 2026',
+      when: 'Jan – Jul 2025',
       title: 'Gontrel',
       role: 'Junior Product Designer (Contract)',
       place: 'Dublin, Ireland',
