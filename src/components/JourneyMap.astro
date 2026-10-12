@@ -43,7 +43,13 @@ const rich = (s: string) =>
 
     <header class="jmap__top">
       <p class="label jmap__kicker">{journey.kicker}</p>
-      <button class="jmap__close label" type="button" data-journey-close>Close <span aria-hidden="true">✕</span></button>
+      <div class="jmap__actions">
+        <button class="jmap__sound label" type="button" data-jsound aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /><path class="jmap__waves" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>
+          <span data-jsound-label>Sound on</span>
+        </button>
+        <button class="jmap__close label" type="button" data-journey-close>Close <span aria-hidden="true">✕</span></button>
+      </div>
     </header>
 
     <div class="jmap__intro" data-jintro>
@@ -268,7 +274,8 @@ const rich = (s: string) =>
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(to bottom, rgba(12, 16, 20, 0.85), rgba(12, 16, 20, 0) 18%),
+      /* deeper haze at the top: the tilted camera looks towards the horizon */
+      linear-gradient(to bottom, rgba(11, 14, 18, 0.95), rgba(11, 14, 18, 0.55) 16%, rgba(11, 14, 18, 0) 42%),
       linear-gradient(to top, rgba(12, 16, 20, 0.85), rgba(12, 16, 20, 0) 30%),
       radial-gradient(130% 100% at 60% 45%, transparent 55%, rgba(12, 16, 20, 0.7));
   }
@@ -293,6 +300,21 @@ const rich = (s: string) =>
     transition: background 0.3s, color 0.3s;
   }
   .jmap__close:hover { background: var(--fog); color: var(--night); }
+  .jmap__actions { display: flex; gap: 10px; align-items: center; }
+  .jmap__sound {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    color: var(--mist);
+    transition: color 0.3s, background 0.3s;
+  }
+  .jmap__sound:hover { color: var(--fog); background: rgba(232, 236, 238, 0.08); }
+  .jmap__sound svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+  .jmap__sound[aria-pressed='false'] .jmap__waves { opacity: 0.2; }
+  @media (max-width: 640px) { .jmap__sound span { display: none; } }
 
   .jmap__intro {
     position: absolute;

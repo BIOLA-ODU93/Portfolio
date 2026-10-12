@@ -10,6 +10,7 @@ import type { Map as MLMap, GeoJSONSource } from 'maplibre-gl';
 import routes from '../data/journey-routes.json';
 import { journeyStyle } from './journey-style';
 import { pauseScroll, resumeScroll } from './smooth';
+import { unlockSound, takeoff, stopTakeoff, honk, isMuted, setMuted } from './journey-sound';
 
 type LngLat = [number, number];
 type Stop = { title: string; pos: LngLat; zoom: number; by?: 'danfo' | 'plane' | 'car'; route?: string; midZoom?: number };
@@ -43,6 +44,21 @@ const greatCircle = (p: LngLat, q: LngLat, n = 160): LngLat[] => {
   });
 };
 
+/** Round off sharp corners in a road line (Chaikin), keeping both ends in place. */
+const smoothLine = (pts: LngLat[], passes = 2): LngLat[] => {
+  let out = pts;
+  for (let n = 0; n < passes && out.length > 2; n++) {
+    const next: LngLat[] = [out[0]];
+    for (let i = 0; i < out.length - 1; i++) {
+      const [a, b] = [out[i], out[i + 1]];
+      next.push([lerp(a[0], b[0], 0.25), lerp(a[1], b[1], 0.25)], [lerp(a[0], b[0], 0.75), lerp(a[1], b[1], 0.75)]);
+    }
+    next.push(out[out.length - 1]);
+    out = next;
+  }
+  return out;
+};
+
 export function initJourney() {
   const dialog = document.querySelector<HTMLDialogElement>('[data-journey]');
   const mapEl = dialog?.querySelector<HTMLElement>('[data-jmap]');
@@ -56,7 +72,7 @@ export function initJourney() {
   const legs: (Leg | null)[] = stops.map((s, i) => {
     if (i === 0) return null;
     const prev = stops[i - 1].pos;
-    const coords: LngLat[] = s.by === 'plane' ? greatCircle(prev, s.pos) : s.route && R[s.route] ? R[s.route].coords : [prev, s.pos];
+    const coords: LngLat[] = s.by === 'plane' ? greatCircle(prev, s.pos) : s.route && R[s.route] ? smoothLine(R[s.route].coords) : [prev, s.pos];
     const cum = [0];
     for (let j = 1; j < coords.length; j++) cum.push(cum[j - 1] + km(coords[j - 1], coords[j]));
     return { by: s.by ?? null, coords, cum, total: cum[cum.length - 1] || 1e-6, midZoom: s.midZoom ?? Math.min(stops[i - 1].zoom, s.zoom) };
@@ -68,6 +84,12 @@ export function initJourney() {
     const a = leg.coords[j - 1], b = leg.coords[j];
     const f = clamp((d - leg.cum[j - 1]) / ((leg.cum[j] - leg.cum[j - 1]) || 1e-6));
     return { p: [lerp(a[0], b[0], f), lerp(a[1], b[1], f)], b: bearing(a, b) };
+  };
+  /** Heading that looks a little ahead on the road, so the vehicle steers through bends. */
+  const steer = (leg: Leg, t: number) => {
+    const w = Math.min(0.12, leg.total * 0.02) / leg.total; // ~120 m either side
+    const a = at(leg, clamp(t - w)).p, b = at(leg, clamp(t + w)).p;
+    return a[0] === b[0] && a[1] === b[1] ? at(leg, t).b : bearing(a, b);
   };
   const doneLine = (k: number, t: number): LngLat[] => {
     const out: LngLat[] = [stops[0].pos];
@@ -98,14 +120,22 @@ export function initJourney() {
 
   // ── Motion state
   const OVERVIEW = { center: [-1.5, 28] as LngLat, zoom: 2.25 };
-  const pitchAt = (k: number) => (k < 1 ? 0 : stops[k - 1].zoom > 13.5 ? 55 : 45);
+  // Sobha-style camera: a steep tilt and a diagonal heading (flatter on phones, which load less)
+  const small = window.matchMedia('(max-width: 640px)').matches;
+  const pitchAt = (k: number) => (k < 1 ? 0 : Math.min(small ? 52 : 90, stops[k - 1].zoom > 13.5 ? 64 : 58));
+  const CAM_BEARING = -30; // degrees; the map turns as the journey begins
   let p = 0; // where we are
   let target = 0; // where we're heading (integer stop)
   let tween: { from: number; to: number; start: number; dur: number } | null = null;
   let playing = false;
   let playTimer = 0;
-  const cam = { lng: OVERVIEW.center[0], lat: OVERVIEW.center[1], zoom: OVERVIEW.zoom, pitch: 0, heading: 0 };
+  const cam = { lng: OVERVIEW.center[0], lat: OVERVIEW.center[1], zoom: OVERVIEW.zoom, pitch: 0, heading: 0, bearing: 0 };
   let primed = false; // first frame snaps the camera instead of easing in
+  // the camera leans gently towards the mouse (fine pointers only)
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+  let lastV: { lng: number; lat: number; kind: string; visible: boolean } | null = null;
+  let hopStart = -1;
 
   const legDuration = (i: number) => {
     // time to travel into stop i+1 (1-based i), or from the overview into stop 1 (i = 0)
@@ -163,7 +193,7 @@ export function initJourney() {
       const a = stops[i - 1], b = stops[i] ?? a;
       if (leg && leg.total > 0.05 && f > 0 && q < S) {
         const v = at(leg, f);
-        vpos = v.p; vbear = v.b; kind = leg.by ?? 'car';
+        vpos = v.p; vbear = leg.by === 'plane' ? v.b : steer(leg, f); kind = leg.by ?? 'car';
         center = vpos;
         const zc = 2 * leg.midZoom - (a.zoom + b.zoom) / 2;
         zoom = (1 - f) ** 2 * a.zoom + 2 * f * (1 - f) * zc + f ** 2 * b.zoom;
@@ -180,7 +210,8 @@ export function initJourney() {
         vbear = nextLeg ? bearing(nextLeg.coords[0], nextLeg.coords[Math.min(1, nextLeg.coords.length - 1)]) : prevLeg ? at(prevLeg, 1).b : 0;
       }
     }
-    return { center, zoom, pitch, vpos, vbear, kind, alt };
+    const camBearing = CAM_BEARING * clamp(q);
+    return { center, zoom, pitch, vpos, vbear, kind, alt, camBearing };
   };
 
   // ── Render loop (runs only while the map is open)
@@ -189,6 +220,7 @@ export function initJourney() {
   let ready = false;
   let loop = 0;
   let last = 0;
+  let planeLeg = -1;
   const angleLerp = (a: number, b: number, t: number) => a + ((((b - a) % 360) + 540) % 360 - 180) * t;
 
   const frame = (now: number) => {
@@ -213,10 +245,30 @@ export function initJourney() {
     cam.lat = lerp(cam.lat, v.center[1], k);
     cam.zoom = lerp(cam.zoom, v.zoom, k);
     cam.pitch = lerp(cam.pitch, v.pitch, k);
-    cam.heading = angleLerp(cam.heading, v.vbear, primed ? 1 - Math.exp(-dt / 0.1) : 1);
-    map.jumpTo({ center: [cam.lng, cam.lat], zoom: cam.zoom, pitch: cam.pitch, bearing: 0 });
+    cam.bearing = lerp(cam.bearing, v.camBearing, k);
+    cam.heading = angleLerp(cam.heading, v.vbear, primed ? 1 - Math.exp(-dt / 0.22) : 1);
+    const km2 = 1 - Math.exp(-dt / 0.45); // the lean follows the mouse slowly, like a floating camera
+    mouse.sx = lerp(mouse.sx, mouse.x, km2);
+    mouse.sy = lerp(mouse.sy, mouse.y, km2);
+    const lean = clamp(p); // no lean on the flat opening globe
+    map.jumpTo({
+      center: [cam.lng, cam.lat],
+      zoom: cam.zoom,
+      pitch: clamp(cam.pitch - mouse.sy * 6 * lean, 0, 70),
+      bearing: cam.bearing + mouse.sx * 10 * lean,
+    });
+    // takeoff: start the jet sound as the plane leg begins
+    const leg = Math.floor(p);
+    if (tween && tween.to > tween.from && legs[leg]?.by === 'plane' && p - leg > 0.01 && planeLeg !== leg) {
+      planeLeg = leg;
+      takeoff(Math.max(0, tween.dur * (1 - clamp((now - tween.start) / tween.dur))));
+    }
+    if (legs[leg]?.by !== 'plane' || p - leg <= 0.01) { if (planeLeg !== -1) stopTakeoff(); planeLeg = -1; }
+    const hop = hopStart < 0 ? 0 : Math.sin(Math.PI * clamp((now - hopStart) / 380)) * 0.35;
+    if (hopStart >= 0 && now - hopStart > 380) hopStart = -1;
     // the vehicle appears once the journey starts (keeps the opening globe clean)
-    vehicles.set({ lng: v.vpos[0], lat: v.vpos[1], heading: cam.heading, kind: v.kind, alt: v.alt, visible: p > 0.45 });
+    vehicles.set({ lng: v.vpos[0], lat: v.vpos[1], heading: cam.heading, kind: v.kind, alt: v.alt + hop, visible: p > 0.45 });
+    lastV = { lng: v.vpos[0], lat: v.vpos[1], kind: v.kind, visible: p > 0.45 };
 
     const src = map.getSource('route-done') as GeoJSONSource | undefined;
     if (src) {
@@ -271,13 +323,45 @@ export function initJourney() {
     if (Math.abs(dy) > 40) { stopPlay(); goTo(target + Math.sign(dy)); }
   });
 
+  // ── Mouse: lean the camera; click the danfo to honk
+  const stage = mapEl.parentElement!;
+  const nearVehicle = (e: MouseEvent) => {
+    if (!map || !lastV?.visible) return false;
+    const pt = map.project([lastV.lng, lastV.lat]);
+    const r = mapEl.getBoundingClientRect();
+    return Math.hypot(e.clientX - r.left - pt.x, e.clientY - r.top - pt.y) < 46;
+  };
+  const onControl = (e: Event) => !!(e.target as HTMLElement).closest('a, button, [data-jcard], .jnav, .jctrl');
+  stage.addEventListener('pointermove', (e) => {
+    if (finePointer && !reduce.matches) {
+      mouse.x = clamp((e.clientX / window.innerWidth) * 2 - 1, -1, 1);
+      mouse.y = clamp((e.clientY / window.innerHeight) * 2 - 1, -1, 1);
+    }
+    stage.style.cursor = !onControl(e) && lastV?.kind === 'danfo' && nearVehicle(e) ? 'pointer' : '';
+  });
+  stage.addEventListener('pointerleave', () => { mouse.x = 0; mouse.y = 0; });
+  stage.addEventListener('click', (e) => {
+    if (onControl(e) || lastV?.kind !== 'danfo' || !nearVehicle(e)) return;
+    unlockSound();
+    honk();
+    if (!reduce.matches) hopStart = performance.now();
+  });
+  const soundBtn = $<HTMLButtonElement>('[data-jsound]');
+  const syncSound = () => {
+    if (!soundBtn) return;
+    soundBtn.setAttribute('aria-pressed', String(!isMuted()));
+    soundBtn.querySelector('[data-jsound-label]')!.textContent = isMuted() ? 'Sound off' : 'Sound on';
+  };
+  soundBtn?.addEventListener('click', () => { unlockSound(); setMuted(!isMuted()); if (isMuted()) stopTakeoff(); syncSound(); });
+  syncSound();
+
   // ── Map (created the first time the dialog opens)
   let starting: Promise<void> | null = null;
   const ensureMap = () => (starting ??= (async () => {
     try {
       const ml = await import('maplibre-gl');
       ml.setWorkerUrl('/vendor/maplibre/maplibre-gl-worker.mjs'); // self-hosted (see scripts/copy-maplibre-worker.mjs)
-      map = new ml.Map({ container: mapEl, style: journeyStyle, center: OVERVIEW.center, zoom: OVERVIEW.zoom, interactive: false, attributionControl: { compact: true }, fadeDuration: 0 });
+      map = new ml.Map({ container: mapEl, style: journeyStyle, center: OVERVIEW.center, zoom: OVERVIEW.zoom, interactive: false, maxPitch: 70, attributionControl: { compact: true }, fadeDuration: 0 });
       map.on('error', (e) => console.warn('[journey map]', e?.error?.message ?? e));
       if (import.meta.env.DEV) (window as any).__jmap = map; // dev-only handle for debugging
       await new Promise<void>((res) => map!.once('load', () => res()));
@@ -309,6 +393,9 @@ export function initJourney() {
   // ── Rewind to the opening globe, so every visit starts with the full journey
   const rewind = () => {
     stopPlay();
+    stopTakeoff();
+    planeLeg = -1;
+    mouse.x = mouse.y = mouse.sx = mouse.sy = 0;
     tween = null;
     p = 0;
     target = 0;
@@ -323,6 +410,7 @@ export function initJourney() {
   const FADE = reduce.matches ? 0 : 700;
   const open = () => {
     if (dialog.open) return;
+    unlockSound(); // opening is a click, so browsers allow sound from here on
     dialog.showModal();
     document.documentElement.classList.add('journey-open');
     pauseScroll();

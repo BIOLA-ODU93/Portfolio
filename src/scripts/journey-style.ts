@@ -15,7 +15,7 @@ const c = {
   minor: '#1b232b',
   major: '#2a343e',
   motorway: '#38444f',
-  building: '#1f2830',
+  building: '#26313a',
   border: 'rgba(197, 210, 219, 0.35)',
   label: '#8d9aa4',
   labelStrong: '#c5d2db',
@@ -41,7 +41,8 @@ export const journeyStyle: StyleSpecification = {
   projection: { type: 'globe' },
   glyphs: GLYPHS,
   sources: { omt: { type: 'vector', url: TILES, attribution: '© OpenStreetMap contributors · OpenFreeMap' } },
-  sky: { 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.6, 5, 0.2, 7, 0] } as any,
+  // a dark haze where the tilted map meets the sky
+  sky: { 'sky-color': '#0b0e12', 'horizon-color': '#1a2229', 'sky-horizon-blend': 0.8, 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.6, 5, 0.2, 7, 0] } as any,
   layers: [
     { id: 'bg', type: 'background', paint: { 'background-color': c.land } },
     { id: 'water', type: 'fill', source: 'omt', 'source-layer': 'water', paint: { 'fill-color': c.water } },
@@ -83,12 +84,12 @@ export const journeyStyle: StyleSpecification = {
       paint: { 'line-color': c.motorway, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, 14] },
     },
     {
-      id: 'buildings', type: 'fill-extrusion', source: 'omt', 'source-layer': 'building', minzoom: 13.5,
+      id: 'buildings', type: 'fill-extrusion', source: 'omt', 'source-layer': 'building', minzoom: 13,
       paint: {
         'fill-extrusion-color': c.building,
         'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 8],
         'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-        'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 13.5, 0, 14.5, 0.85],
+        'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0, 14, 0.9],
       },
     },
     // Labels stay quiet: only the two countries of the story, cities when regional, areas up close
