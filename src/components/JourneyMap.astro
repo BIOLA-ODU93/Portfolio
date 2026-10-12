@@ -317,6 +317,8 @@ const rich = (s: string) =>
     text-transform: uppercase;
     text-wrap: balance;
   }
+  /* keep the title clear of the year index on the right (mirrored so it stays centred) */
+  @media (min-width: 901px) { .jmap__intro { padding-inline: calc(var(--gutter) + 200px); } }
   .jmap__lede { max-width: 42ch; color: rgba(232, 236, 238, 0.75); font-size: var(--type-small); }
 
   /* Cards */

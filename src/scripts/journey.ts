@@ -306,6 +306,19 @@ export function initJourney() {
     }
   })());
 
+  // ── Rewind to the opening globe, so every visit starts with the full journey
+  const rewind = () => {
+    stopPlay();
+    tween = null;
+    p = 0;
+    target = 0;
+    primed = false; // next frame snaps the camera back to the overview
+    mapEl.classList.remove('is-ready'); // and the map fades in again
+    const src = map?.getSource('route-done') as GeoJSONSource | undefined;
+    src?.setData({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [stops[0].pos] } });
+    syncUI();
+  };
+
   // ── Open / close — a smooth fade both ways
   const FADE = reduce.matches ? 0 : 700;
   const open = () => {
@@ -335,8 +348,8 @@ export function initJourney() {
   };
   dialog.addEventListener('cancel', (e) => { e.preventDefault(); close(); }); // Esc fades out too
   dialog.addEventListener('close', () => {
-    stopPlay();
     cancelAnimationFrame(loop);
+    rewind();
     dialog.classList.remove('is-in');
     document.documentElement.classList.remove('journey-open');
     resumeScroll();
@@ -346,6 +359,8 @@ export function initJourney() {
     b.addEventListener('click', (e) => { e.preventDefault(); open(); });
     b.addEventListener('pointerenter', () => { import('maplibre-gl'); }, { once: true }); // warm up on hover
   });
+  // coming back via the browser's back button restores the page as it was; start over instead
+  window.addEventListener('pageshow', (e) => { if (e.persisted) rewind(); });
   if (location.hash === '#journey') open();
   syncUI();
 }
