@@ -72,13 +72,13 @@ const mail = `mailto:${site.email}?subject=${encodeURIComponent('Hello from your
     transform: translateY(14px) scale(0.98);
     transition: opacity 0.45s var(--ease-out), transform 0.55s var(--ease-out);
   }
-  .talk::backdrop { background: rgba(6, 9, 12, 0.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.45s var(--ease-out); }
+  .talk::backdrop { background: rgba(10, 8, 6, 0.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.45s var(--ease-out); }
   .talk:global(.is-in) { opacity: 1; transform: none; }
   .talk:global(.is-in)::backdrop { opacity: 1; }
   .talk__panel {
     padding: clamp(20px, 3vw, 28px);
     background: var(--night-2);
-    border: 1px solid rgba(232, 236, 238, 0.14);
+    border: 1px solid rgba(208, 197, 171, 0.14);
     border-radius: 14px;
     box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
   }
@@ -93,7 +93,7 @@ const mail = `mailto:${site.email}?subject=${encodeURIComponent('Hello from your
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 1px solid rgba(232, 236, 238, 0.25);
+    border: 1px solid rgba(208, 197, 171, 0.25);
     transition: background 0.3s, color 0.3s;
   }
   .talk__close:hover { background: var(--fog); color: var(--night); }
@@ -108,11 +108,11 @@ const mail = `mailto:${site.email}?subject=${encodeURIComponent('Hello from your
     min-height: 64px;
     padding: 10px 16px 10px 10px;
     border-radius: 10px;
-    background: rgba(232, 236, 238, 0.04);
-    border: 1px solid rgba(232, 236, 238, 0.1);
+    background: rgba(208, 197, 171, 0.04);
+    border: 1px solid rgba(208, 197, 171, 0.1);
     transition: background 0.3s, border-color 0.3s, transform 0.4s var(--ease-out);
   }
-  .talk__opt:hover { background: rgba(232, 236, 238, 0.09); border-color: rgba(232, 236, 238, 0.3); transform: translateX(2px); }
+  .talk__opt:hover { background: rgba(208, 197, 171, 0.09); border-color: rgba(208, 197, 171, 0.3); transform: translateX(2px); }
   .talk__icon {
     display: grid;
     place-items: center;
@@ -127,17 +127,17 @@ const mail = `mailto:${site.email}?subject=${encodeURIComponent('Hello from your
   .talk__icon--wa { background: #25d366; color: #06231a; }
   .talk__text { display: grid; gap: 2px; min-width: 0; }
   .talk__name { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-1); line-height: 1.1; letter-spacing: -0.02em; }
-  .talk__detail { font-size: var(--type-small); color: rgba(232, 236, 238, 0.65); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .talk__arrow { margin-left: auto; color: rgba(232, 236, 238, 0.6); }
+  .talk__detail { font-size: var(--type-small); color: rgba(208, 197, 171, 0.65); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .talk__arrow { margin-left: auto; color: rgba(208, 197, 171, 0.6); }
   .talk__copy {
     flex: none;
     padding: 0 14px;
     border-radius: 10px;
-    border: 1px solid rgba(232, 236, 238, 0.14);
+    border: 1px solid rgba(208, 197, 171, 0.14);
     transition: background 0.3s, color 0.3s;
   }
   .talk__copy:hover { background: var(--fog); color: var(--night); }
-  .talk__foot { margin: 18px 0 0; font-size: var(--type-small); color: rgba(232, 236, 238, 0.55); }
+  .talk__foot { margin: 18px 0 0; font-size: var(--type-small); color: rgba(208, 197, 171, 0.55); }
 
   @media (max-width: 520px) {
     .talk { position: fixed; inset: auto 0 0 0; margin: 0; width: 100%; border-radius: 16px 16px 0 0; }

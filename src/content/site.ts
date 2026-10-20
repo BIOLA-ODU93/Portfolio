@@ -60,11 +60,11 @@ export const projects = [
  * Wrap words in *asterisks* for the accent colour. [brackets] = placeholder.
  */
 export const about = {
-  statement: 'Hi, I’m Biola. I take products that feel complicated and make them *feel obvious,* then I check the numbers to be sure.',
+  statement: 'Hi, I’m Biola. Nine years in design, from insurance campaigns in Lagos to product teams in Dublin, and *one job the whole way:* making things people understand.',
   start: {
     label: 'Where it began',
-    text: 'I studied mass communication at Babcock University, and one lesson stuck: a message only works if people get it. In 2019 I started designing in Ikeja, brand identity first, then UI/UX. By 2022 I was building fintech products at Sky Capital in Lagos, and in 2024 I moved to Dublin for an MSc in Interactive Digital Media.',
-    portrait: { src: '/images/portrait-colour@1x.webp', src2x: '/images/portrait-colour@2x.webp', alt: 'Abiola Oduyemi in a striped shirt and patterned tie' },
+    text: 'I studied mass communication at Babcock University, and one lesson stuck: a message only works if people get it. I started as a designer in 2017, creating campaigns at AIICO Insurance for five years. In 2022 I moved into product design at Sky Capital in Lagos, and grew from designing for one office to leading design across Lagos, Sierra Leone and The Gambia. In 2024 I came to Dublin for an MSc in Interactive Digital Media.',
+    portrait: { src: '/images/about-headshot@1x.webp', src2x: '/images/about-headshot@2x.webp', alt: 'Abiola Oduyemi in a black suit and shirt' },
   },
   outside: {
     label: 'Off the clock',
@@ -80,18 +80,19 @@ export const about = {
   focus: 'Pretty screens are easy. I care about the ones that *change the numbers.*',
   resultsLabel: 'What changed',
   results: [
-    { value: '40%', label: 'less workflow friction', where: 'Gontrel · B2B data product' },
-    { value: '35%', label: 'fewer navigation errors', where: 'HNG · dashboards' },
     { value: '40%', label: 'fewer support tickets', where: 'Sky Capital · fintech' },
     { value: '50%', label: 'higher user retention', where: 'Sky Capital · fintech' },
+    { value: '3', label: 'countries designed for', where: 'Lagos · Sierra Leone · The Gambia' },
+    { value: '9+', label: 'years in design', where: 'Brand, graphic & product' },
   ],
   best: {
     label: 'How I work',
-    skills: 'UX research, user flows, journey mapping, interaction design, UI design, prototyping, usability testing, design systems, dashboards, web & mobile, Figma, Framer, brand & visual design.',
-    story: 'Research first, then flows, prototypes and testing, and a design system so it all stays consistent after launch. My brand background means it looks right too.',
-    now: 'Currently leading end-to-end design at Gontrel, a data-centric B2B product in Dublin.',
+    skills: 'User research (interviews, surveys, competitive analysis), journey mapping, sitemaps, user flows, wireframes, prototyping, usability and A/B testing, accessible UI (WCAG), design systems, developer handoff, brand identity, logo design and illustration. Figma, Framer, Adobe Illustrator & Photoshop, HTML/CSS.',
+    story: 'Research first, then flows, prototypes and testing, and a design system so it all stays consistent after launch. My brand and graphic background means it looks right too.',
+    now: 'Currently Product & Graphic Designer at King’s Court, Dublin, leading the design of the organisation’s new website. Open to Product Designer roles in Ireland and remote.',
   },
 };
+
 
 /**
  * THE JOURNEY — the map section (from your CV).

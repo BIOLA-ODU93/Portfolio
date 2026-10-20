@@ -3,14 +3,14 @@
    ───────────────────────────────────────────────────────────── */
 :root {
   /* ── Palette: cool, quiet, low-saturation ── */
-  --fog: #dfe5e8;           /* text on dark — a soft off-white, not pure white */
-  --fog-2: #dbe1e5;
-  --night: #0b0e12;         /* page background */
-  --night-2: #151b21;
-  --night-3: #1d252d;
-  --mist: #c5d2db;          /* closing section */
-  --accent: #9fbfd4;        /* glacier blue — pins, active states, focus on dark */
-  --accent-ink: #34566e;    /* accent dark enough for text on fog (≥ 6:1) */
+  --fog: #d0c5ab;           /* text on dark — a soft off-white, not pure white */
+  --fog-2: #c4b99f;
+  --night: #11100d;         /* page background */
+  --night-2: #181713;
+  --night-3: #211f1a;
+  --mist: #a89f88;          /* closing section */
+  --accent: #ece4cf;        /* light sand — highlights, active states, focus on dark */
+  --accent-ink: #5e5440;    /* accent dark enough for text on fog (≥ 6:1) */
 
   /* ── Type families ── */
   --font-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
@@ -64,7 +64,7 @@
   --bg: var(--fog);
   --fg: var(--night);
   --muted: #4f5a63;
-  --line: rgba(12, 16, 20, 0.14);
+  --line: rgba(18, 14, 11, 0.14);
   --accent-text: var(--accent-ink);
   --pin: var(--accent-ink);
   --ph-bg: rgba(52, 86, 110, 0.08);
@@ -73,12 +73,12 @@
 }
 [data-theme='ink'] {
   --bg: var(--night);
-  --fg: #e8ecee;
+  --fg: #ece3d3;
   --muted: #94a1ab;
-  --line: rgba(232, 236, 238, 0.14);
+  --line: rgba(236, 227, 211, 0.14);
   --accent-text: var(--accent);
   --pin: var(--accent);
-  --ph-bg: rgba(159, 191, 212, 0.1);
+  --ph-bg: rgba(217, 138, 75, 0.1);
   background: var(--bg);
   color: var(--fg);
 }
@@ -86,10 +86,10 @@
   --bg: var(--mist);
   --fg: var(--night);
   --muted: #3d4a54;
-  --line: rgba(12, 16, 20, 0.2);
+  --line: rgba(18, 14, 11, 0.2);
   --accent-text: var(--accent-ink);
   --pin: var(--night);
-  --ph-bg: rgba(12, 16, 20, 0.06);
+  --ph-bg: rgba(18, 14, 11, 0.06);
   background: var(--bg);
   color: var(--fg);
 }

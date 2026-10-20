@@ -9,16 +9,16 @@ const TILES = 'https://tiles.openfreemap.org/planet';
 const GLYPHS = 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf';
 
 const c = {
-  land: '#0f1418',
-  water: '#06090c',
-  park: '#121a1c',
-  minor: '#1b232b',
-  major: '#2a343e',
-  motorway: '#38444f',
-  building: '#26313a',
-  border: 'rgba(197, 210, 219, 0.35)',
-  label: '#8d9aa4',
-  labelStrong: '#c5d2db',
+  land: '#16110d',
+  water: '#0b0806',
+  park: '#161a10',
+  minor: '#241d17',
+  major: '#352b22',
+  motorway: '#45382c',
+  building: '#30271f',
+  border: 'rgba(168, 159, 136, 0.35)',
+  label: '#a3958a',
+  labelStrong: '#a89f88',
 };
 
 const width = (base: number) =>
@@ -42,7 +42,7 @@ export const journeyStyle: StyleSpecification = {
   glyphs: GLYPHS,
   sources: { omt: { type: 'vector', url: TILES, attribution: '© OpenStreetMap contributors · OpenFreeMap' } },
   // a dark haze where the tilted map meets the sky
-  sky: { 'sky-color': '#0b0e12', 'horizon-color': '#1a2229', 'sky-horizon-blend': 0.8, 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.6, 5, 0.2, 7, 0] } as any,
+  sky: { 'sky-color': '#11100d', 'horizon-color': '#251d16', 'sky-horizon-blend': 0.8, 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.6, 5, 0.2, 7, 0] } as any,
   layers: [
     { id: 'bg', type: 'background', paint: { 'background-color': c.land } },
     { id: 'water', type: 'fill', source: 'omt', 'source-layer': 'water', paint: { 'fill-color': c.water } },

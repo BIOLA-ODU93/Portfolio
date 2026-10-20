@@ -1,7 +1,7 @@
 ---
 /**
  * Hero — built from Figma "Hero — Option A" (Landing Page, node 256:119).
- * Header (Menu · signature · 3D Map), centred headline, floating pill menu.
+ * Header (signature only), headline over the portrait, floating pill navigation.
  */
 import { site } from '../content/site';
 
@@ -21,8 +21,8 @@ const email = site.email.replace(/[[\]]/g, '');
     srcset="/images/portrait@1x.webp 1x, /images/portrait@2x.webp 2x"
     alt=""
     aria-hidden="true"
-    width="812"
-    height="977"
+    width="1080"
+    height="865"
     fetchpriority="high"
   />
   <img
@@ -31,54 +31,37 @@ const email = site.email.replace(/[[\]]/g, '');
     srcset="/images/portrait-colour@1x.webp 1x, /images/portrait-colour@2x.webp 2x"
     alt=""
     aria-hidden="true"
-    width="812"
-    height="977"
+    width="1080"
+    height="865"
     data-colour
   />
 
   <header class="hero__header">
-    <button class="hero__menu" type="button" aria-haspopup="dialog" aria-controls="site-menu" data-menu-open>
-      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" stroke-width="1.5" /></svg>
-      <span>Menu</span>
-    </button>
-
     <a class="hero__logo" href="#top">
       <img src="/brand/signature.png" alt={`${site.displayName} — home`} width="115" height="88" />
     </a>
 
-    <button class="hero__map" type="button" data-journey-open aria-haspopup="dialog" aria-controls="journey-map">3D Map</button>
   </header>
 
   <div class="hero__center">
   <h1 id="hero-title" class="hero__title">
     <span class="visually-hidden">{site.displayName} — </span>
-    <img class="hero__script" src="/brand/the-designer-word.png" alt="The Designer" width="301" height="95" />
-    <span class="hero__caps">That does more</span>
+    <span class="hero__caps">I make complex products <em>feel obvious.</em></span>
   </h1>
   <p class="hero__roles">{site.roles}</p>
   </div>
 
   <nav class="pill" aria-label="Main">
     {links.map((l) => <a class="pill__link" href={l.href}>{l.label}</a>)}
-    <a class="pill__cta" href={`mailto:${email}`} data-contact-open>Let’s talk</a>
+    <a class="pill__cta" href={`mailto:${email}`} data-contact-open>
+      <span class="cta__face" aria-hidden="true"><img src="/images/avatar.webp" alt="" width="48" height="48" /></span>
+      <span>Let’s talk</span>
+      <span class="cta__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z" /></svg></span>
+    </a>
   </nav>
 </section>
 
-<dialog id="site-menu" class="menu" aria-label="Menu" data-menu>
-  <button class="menu__close" type="button" data-menu-close>Close</button>
-  <nav aria-label="Menu">
-    <ol>
-      {links.map((l) => <li><a href={l.href} data-menu-link>{l.label}</a></li>)}
-      <li><a href={`mailto:${email}`} data-contact-open>Let’s talk</a></li>
-    </ol>
-  </nav>
-</dialog>
-
 <script>
-  const menu = document.querySelector<HTMLDialogElement>('[data-menu]');
-  document.querySelector('[data-menu-open]')?.addEventListener('click', () => menu?.showModal());
-  document.querySelector('[data-menu-close]')?.addEventListener('click', () => menu?.close());
-  menu?.querySelectorAll('[data-menu-link]').forEach((a) => a.addEventListener('click', () => menu.close()));
 
   // ── Portrait: glides toward the mouse, and a spotlight reveals the colour
   // original wherever the cursor is over the body (transparent pixels don't count).
@@ -184,11 +167,12 @@ const email = site.email.replace(/[[\]]/g, '');
   .hero { isolation: isolate; overflow: hidden; }
   .portrait {
     position: absolute;
-    top: 17.7%;
-    left: 52.1%;
-    height: 108.5%;
+    /* fills the hero: as tall as the screen allows, head near the top, shoulders running off the bottom */
+    top: 6%;
+    left: 50%;
+    height: max(96%, calc(100vw / 1.249 * 0.78));
     width: auto;
-    aspect-ratio: 812 / 977;
+    aspect-ratio: 1080 / 865;
     max-width: none;
     translate: -50% 0;
     z-index: -1;
@@ -197,7 +181,23 @@ const email = site.email.replace(/[[\]]/g, '');
     will-change: transform;
     transform: translate3d(var(--px, 0px), var(--py, 0px), 0) rotate(var(--pr, 0deg)) scale(var(--ps, 1));
   }
-  .portrait--ghost { mix-blend-mode: overlay; }
+  .portrait--ghost {
+    mix-blend-mode: overlay;
+    /* soften the side and bottom edges into the night */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(#000 58%, transparent 92%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(#000 58%, transparent 92%);
+    mask-composite: intersect;
+  }
+  /* a gentle shade behind the headline so it reads over the photo */
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent 40%, rgba(17, 16, 13, 0.55) 62%, rgba(17, 16, 13, 0.92) 85%);
+  }
   .portrait--colour {
     /* spotlight: --r is the radius, --mx/--my the centre (px within the image) */
     -webkit-mask-image: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), #000 0, #000 calc(var(--r, 0px) * 0.55), transparent var(--r, 0px));
@@ -209,33 +209,14 @@ const email = site.email.replace(/[[\]]/g, '');
     position: absolute;
     inset: 0 0 auto 0;
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 1fr;
+    justify-items: center;
     align-items: center;
     padding: clamp(14px, 1.8vw, 26px) clamp(20px, 3.3vw, 48px);
     font-size: var(--fs-0);
   }
-  .hero__menu {
-    justify-self: start;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 44px;
-    padding: 0 12px;
-    margin-left: -12px;
-    text-transform: uppercase;
-  }
-  .hero__menu svg { width: 24px; height: 24px; }
   .hero__logo img { width: auto; height: clamp(56px, 6.1vw, 88px); transition: opacity 0.3s; }
   .hero__logo:hover img { opacity: 0.75; }
-  .hero__map {
-    justify-self: end;
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    text-transform: uppercase;
-  }
-  .hero__menu:hover,
-  .hero__map:hover { color: var(--accent); }
   .ph { outline: 1px dashed currentColor; outline-offset: 4px; opacity: 0.85; }
 
   /* ── Headline ── */
@@ -246,21 +227,19 @@ const email = site.email.replace(/[[\]]/g, '');
     font-weight: var(--fw-display);
     text-align: center;
   }
-  .hero__script {
-    /* "The Designer" in Filmotype Yukon, exported from Figma (301px wide at 1440) */
-    width: clamp(190px, 20.9vw, 301px);
-    height: auto;
-  }
   .hero__caps {
     font-family: var(--font-display);
-    font-size: var(--fs-4);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    text-transform: uppercase;
+    font-weight: 500;
+    font-size: clamp(2rem, 1rem + 3vw, 4.2rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    max-width: 19ch;
+    text-wrap: balance;
   }
+  .hero__caps em { font-style: normal; color: var(--accent); }
 
   /* the role line hangs under the headline without moving it off-centre */
-  .hero__center { position: relative; }
+  .hero__center { position: relative; align-self: end; margin-bottom: clamp(140px, 22vh, 220px); }
   .hero__roles {
     position: absolute;
     top: 100%;
@@ -286,7 +265,7 @@ const email = site.email.replace(/[[\]]/g, '');
     gap: clamp(12px, 2.2vw, 32px);
     padding: 8px 8px 8px clamp(18px, 1.95vw, 28px);
     background: var(--night-2);
-    border: 1px solid rgba(232, 236, 238, 0.85);
+    border: 1px solid rgba(208, 197, 171, 0.85);
     border-radius: 999px;
     white-space: nowrap;
   }
@@ -303,46 +282,27 @@ const email = site.email.replace(/[[\]]/g, '');
   }
   .pill__link { padding: 0; }
   .pill__link:hover { color: var(--accent); }
+  /* Let's talk: your face says "a person answers"; on hover it slides out and a chat icon slides in */
   .pill__cta {
-    padding: 0 18px;
+    gap: 10px;
+    padding: 0 18px 0 6px;
     background: var(--fog);
     color: var(--night);
+    transition: background 0.35s, padding 0.45s var(--ease-out);
   }
-  .pill__cta:hover { background: var(--accent); }
+  .cta__face, .cta__icon { display: inline-grid; place-items: center; overflow: hidden; transition: width 0.45s var(--ease-out), opacity 0.3s, margin 0.45s var(--ease-out); }
+  .cta__face { width: 28px; height: 28px; border-radius: 50%; }
+  .cta__face img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+  .cta__icon { width: 0; opacity: 0; margin-left: -10px; }
+  .cta__icon svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+  .pill__cta:hover, .pill__cta:focus-visible { background: var(--accent); padding: 0 12px 0 18px; }
+  .pill__cta:hover .cta__face, .pill__cta:focus-visible .cta__face { width: 0; opacity: 0; margin-right: -10px; }
+  .pill__cta:hover .cta__icon, .pill__cta:focus-visible .cta__icon { width: 20px; opacity: 1; margin-left: 0; }
 
-  /* ── Menu dialog ── */
-  .menu {
-    width: 100%;
-    max-width: none;
-    height: 100%;
-    max-height: none;
-    margin: 0;
-    padding: clamp(20px, 3.3vw, 48px);
-    border: 0;
-    background: var(--night);
-    color: var(--fog);
-  }
-  .menu::backdrop { background: var(--night); }
-  .menu__close {
-    min-height: 44px;
-    text-transform: uppercase;
-    font-size: var(--fs-0);
-  }
-  .menu ol { margin-top: 10vh; display: grid; gap: 8px; }
-  .menu a {
-    font-family: var(--font-display);
-    font-weight: var(--fw-display);
-    font-size: var(--fs-6);
-    line-height: 1.05;
-    letter-spacing: var(--tracking-display);
-    transition: color 0.25s;
-  }
-  .menu a:hover,
-  .menu a:focus-visible { color: var(--accent); }
 
   @media (max-width: 480px) {
     .pill { bottom: 24px; }
     .pill a { letter-spacing: 0.08em; font-size: 11px; }
-    .pill__cta { padding: 0 14px; }
+    .pill__cta { padding: 0 14px 0 6px; }
   }
 </style>
