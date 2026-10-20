@@ -1,0 +1,85 @@
+---
+/**
+ * A working copy of the Praisetival lineup: a staggered grid of minister cards.
+ * Like the live site, cards slide in from alternating sides (±150px, 94% → 100%,
+ * fading in) as the lineup appears; each card then flips in 3D to show a bio
+ * (press + / ×). The case-study script adds `.is-shown` to play the entrance.
+ * Data: `lineup` on the decision in src/content/work.ts.
+ */
+interface Card { name: string; role: string; photo: string; bio: string }
+interface Props { cards: Card[]; heading?: [string, string] }
+const { cards, heading = ['10+ Ministers', 'One Stage.'] } = Astro.props;
+// three staggered columns, the middle one raised (as on the live site)
+const cols = [[cards[1], cards[3]], [cards[0], cards[4]], [cards[2]]];
+// entrance direction per card, as on the live site: left, middle, right / then reversed on the next row
+const from = [['l', 'r'], ['l', 'r'], ['r', 'l']];
+---
+
+<div class="mc" data-lineup>
+  <p class="mc__head">{heading[0]}<br /><span>{heading[1]}</span></p>
+  <div class="mc__grid">
+    {cols.map((col, c) => (
+      <div class:list={['mc__col', c === 1 && 'mc__col--up']}>
+        {col.filter(Boolean).map((m, row) => (
+          <article class:list={['mc__card', `mc__card--${from[c][row]}`]} data-card style={`--delay: ${(row * 3 + c) * 110}ms`}>
+            <div class="mc__flip">
+              <div class="mc__inner">
+                <div class="mc__face mc__front">
+                  <img src={m.photo} alt={m.name} loading="lazy" decoding="async" />
+                </div>
+                <div class="mc__face mc__back" aria-hidden="true">
+                  <img src={m.photo} alt="" loading="lazy" decoding="async" />
+                  <div class="mc__bio" tabindex="-1">{m.bio.split('\n\n').map((p) => <p>{p}</p>)}</div>
+                </div>
+              </div>
+              <button class="mc__toggle" type="button" aria-expanded="false" aria-label={`Show ${m.name}'s bio`} data-flip>
+                <span aria-hidden="true">+</span>
+              </button>
+            </div>
+            <p class="mc__name">{m.name}</p>
+            <p class="mc__role">{m.role}</p>
+          </article>
+        ))}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .mc { container-type: inline-size; padding: 6cqw 5cqw 4cqw; background: #fff; color: #010101; font-family: Figtree, var(--font-sans); }
+  .mc__head { margin: 0 0 4cqw; text-align: center; font-weight: 600; font-size: clamp(16px, 3.4cqw, 34px); line-height: 1.15; letter-spacing: -0.02em; }
+  .mc__head span { color: #595959; }
+  .mc__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3cqw; align-items: start; }
+  .mc__col { display: grid; gap: 3cqw; margin-top: 8cqw; }
+  .mc__col--up { margin-top: 0; }
+  .mc__card { margin: 0; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--delay), opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--delay); }
+  /* before the entrance plays (only when scripts run and motion is allowed) */
+  :global(html.js) .mc__card:not(:global(.is-shown)) { opacity: 0; transform: translateX(var(--from)) scale(0.94); transition: none; }
+  .mc__card--l { --from: -12cqw; }
+  .mc__card--r { --from: 12cqw; }
+  .mc__flip { position: relative; aspect-ratio: 4 / 5; perspective: 1200px; }
+  .mc__inner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .mc__card:global(.is-flipped) .mc__inner { transform: rotateY(180deg); }
+  .mc__face { position: absolute; inset: 0; overflow: hidden; border-radius: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.35); }
+  .mc__front img { width: 100%; height: 100%; object-fit: cover; }
+  .mc__back { transform: rotateY(180deg); display: grid; grid-template-rows: 40% 1fr; background: #fff; }
+  .mc__back img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+  .mc__bio { overflow-y: auto; padding: 10px 12px; font-size: clamp(10px, 1.35cqw, 13px); line-height: 1.5; color: #333; overscroll-behavior: contain; }
+  .mc__bio p { margin: 0 0 0.8em; }
+  .mc__toggle {
+    position: absolute; top: 8px; right: 8px; z-index: 2;
+    display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
+    background: rgba(255, 255, 255, 0.28); color: #fff; border: 1px solid rgba(255, 255, 255, 0.6);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    font-size: 18px; line-height: 1; transition: background 0.3s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .mc__toggle:hover { background: rgba(255, 255, 255, 0.5); }
+  .mc__card:global(.is-flipped) .mc__toggle { transform: rotate(45deg); background: rgba(0, 0, 0, 0.45); }
+  .mc__name { margin: 1.4cqw 0 0; font-weight: 600; font-size: clamp(11px, 1.9cqw, 17px); }
+  .mc__role { margin: 0.2cqw 0 0; font-size: clamp(9px, 1.4cqw, 13px); color: #595959; }
+  .mc__toggle:focus-visible { outline: 2px solid #5e5440; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    .mc__inner, .mc__toggle { transition: none; }
+    :global(html.js) .mc__card:not(:global(.is-shown)) { opacity: 1; transform: none; }
+  }
+</style>

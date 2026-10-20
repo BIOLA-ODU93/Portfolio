@@ -1,0 +1,223 @@
+---
+/**
+ * Work — two tracks behind one switch: Product design (case-study cards) and
+ * Graphic design (an index; hovering a row floats a preview that follows the
+ * cursor, clicking opens a full-screen gallery). Each track has its own link:
+ * /#product and /#graphic. Copy and images: src/content/work.ts (`work`).
+ */
+import { work } from '../content/work';
+
+const ph = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\[(.+?)\]/g, '<span class="ph">$1</span>');
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<section id="work" class="work" aria-labelledby="work-title" data-work>
+  <span id="product" class="work__anchor" aria-hidden="true"></span>
+  <span id="graphic" class="work__anchor" aria-hidden="true"></span>
+
+  <header class="work__head">
+    <div>
+      <p class="label work__kicker">Work</p>
+      <h2 id="work-title" class="work__title">{work.title}</h2>
+    </div>
+    <div class="work__side">
+      <p class="work__intro">{work.intro}</p>
+      <div class="work__switch" role="tablist" aria-label="Type of work">
+        <button role="tab" id="tab-product" aria-controls="panel-product" aria-selected="true" data-tab="product">
+          Product design <span>{pad(work.product.length)}</span>
+        </button>
+        <button role="tab" id="tab-graphic" aria-controls="panel-graphic" aria-selected="false" tabindex="-1" data-tab="graphic">
+          Graphic design <span>{pad(work.graphic.length)}</span>
+        </button>
+        <i class="work__switch-pill" aria-hidden="true"></i>
+      </div>
+    </div>
+  </header>
+
+  <!-- Product design: case studies -->
+  <div id="panel-product" class="work__panel" role="tabpanel" aria-labelledby="tab-product" data-panel="product">
+    <ul class="pcards">
+      {work.product.map((p, i) => {
+        const Tag = p.href ? 'a' : 'div';
+        return (
+          <li class:list={['pcard', i === 0 && 'pcard--feature']} data-item style={`--i: ${i}`}>
+            <Tag class="pcard__link" href={p.href ?? undefined} data-autoplay-video={p.video ? '' : undefined}>
+              <div class="pcard__media">
+                {p.image
+                  ? <img src={p.image} alt="" loading="lazy" decoding="async" />
+                  : <div class="pcard__blank" aria-hidden="true"><span>{p.client}</span></div>}
+                {p.video && <video src={p.video} muted loop playsinline preload="metadata" aria-hidden="true"></video>}
+                {!p.href && <span class="pcard__soon label">Case study coming soon</span>}
+              </div>
+              <p class="pcard__meta label">{p.client} · {p.role} · {p.medium} · <span set:html={ph(p.year)} /></p>
+              <h3 class="pcard__title">{p.title}</h3>
+              <p class="pcard__result">{p.result}</p>
+              {p.href && <span class="pcard__cta">Read the case study <span aria-hidden="true">→</span></span>}
+            </Tag>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+
+  <!-- Graphic design: index + gallery -->
+  <div id="panel-graphic" class="work__panel" role="tabpanel" aria-labelledby="tab-graphic" data-panel="graphic" hidden>
+    <ol class="gindex">
+      {work.graphic.map((gr, i) => (
+        <li class="grow" data-item style={`--i: ${i}`}>
+          <button
+            class="grow__btn"
+            type="button"
+            data-group={gr.slug}
+            data-previews={JSON.stringify(gr.pieces.map((p) => p.sm))}
+            disabled={gr.pieces.length === 0}
+            aria-label={gr.pieces.length ? `${gr.client.replace(/[[\]]/g, '')}: open gallery of ${gr.pieces.length}` : undefined}
+          >
+            <span class="grow__num">{pad(i + 1)}</span>
+            <span class="grow__name" set:html={ph(gr.client)} />
+            <span class="grow__type">{gr.type}</span>
+            <span class="grow__year" set:html={ph(gr.year)} />
+            <span class="grow__count">{gr.pieces.length ? `${gr.pieces.length} piece${gr.pieces.length > 1 ? 's' : ''}` : 'Coming soon'}</span>
+          </button>
+          {gr.pieces.length > 0 && (
+            <ul class="grow__thumbs" aria-hidden="true">
+              {gr.pieces.slice(0, 4).map((p) => <li><img src={p.sm} alt="" loading="lazy" decoding="async" /></li>)}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ol>
+    <div class="gpreview" aria-hidden="true" data-preview><img alt="" /></div>
+  </div>
+
+  <!-- full-screen gallery -->
+  <dialog class="gallery" aria-label="Gallery" data-gallery>
+    <div class="gallery__top">
+      <p class="label"><span data-g-client></span> · <span data-g-type></span></p>
+      <button class="gallery__close label" type="button" data-g-close>Close <span aria-hidden="true">✕</span></button>
+    </div>
+    <figure class="gallery__stage">
+      <img data-g-img alt="" />
+      <figcaption><span data-g-title></span> <span class="gallery__count" data-g-count></span></figcaption>
+    </figure>
+    <p class="gallery__note" data-g-note></p>
+    <button class="gallery__nav gallery__nav--prev" type="button" aria-label="Previous" data-g-prev>←</button>
+    <button class="gallery__nav gallery__nav--next" type="button" aria-label="Next" data-g-next>→</button>
+  </dialog>
+  <script type="application/json" id="work-gallery-data" set:html={JSON.stringify(work.graphic.map((gr) => ({ slug: gr.slug, client: gr.client, type: gr.type, note: gr.note, pieces: gr.pieces })))} />
+</section>
+
+<style>
+  .work {
+    --line: rgba(208, 197, 171, 0.12);
+    --dim: rgba(208, 197, 171, 0.62);
+    position: relative;
+    padding: clamp(96px, 11vw, 160px) clamp(20px, 4vw, 64px);
+    background: var(--night);
+    color: var(--fog);
+  }
+  .work > *:not(dialog) { max-width: 1280px; margin-left: auto; margin-right: auto; }
+  .work__anchor { position: absolute; top: 0; }
+  .label { color: var(--dim); }
+  .work__kicker { color: var(--accent); }
+
+  .work__head { display: grid; grid-template-columns: 1fr minmax(280px, 460px); gap: 32px 64px; align-items: end; margin-bottom: clamp(40px, 5vw, 72px); }
+  .work__title { margin: 12px 0 0; font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(2.6rem, 1.2rem + 4.4vw, 5.6rem); line-height: 0.98; letter-spacing: var(--tracking-display); }
+  .work__side { display: grid; gap: 24px; }
+  .work__intro { color: var(--dim); line-height: 1.55; }
+  @media (max-width: 860px) { .work__head { grid-template-columns: 1fr; } }
+
+  /* the switch: a pill slides under the active tab */
+  .work__switch { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; justify-self: start; padding: 5px; border-radius: 999px; border: 1px solid rgba(208, 197, 171, 0.2); }
+  .work__switch button { position: relative; z-index: 1; padding: 12px 20px; border-radius: 999px; font-weight: 500; white-space: nowrap; color: var(--dim); transition: color 0.4s var(--ease-out); }
+  .work__switch button span { margin-left: 6px; font-size: 0.75em; opacity: 0.7; }
+  .work__switch button[aria-selected='true'] { color: var(--night); }
+  .work__switch-pill { position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc(50% - 5px); border-radius: 999px; background: var(--fog); transition: translate 0.55s var(--ease-out); }
+  .work__switch:global(.is-graphic) .work__switch-pill { translate: 100% 0; }
+
+  /* entrance when a panel appears: items slide in from alternating sides (as in the Praisetival lineup) */
+  :global(html.js) .work__panel [data-item] { opacity: 0; translate: calc(var(--from, -1) * 40px) 0; scale: 0.97; }
+  :global(html.js) .work__panel [data-item]:nth-child(even) { --from: 1; }
+  :global(html.js) .work__panel:global(.is-in) [data-item] { opacity: 1; translate: 0 0; scale: 1; transition: opacity 0.8s var(--ease-out), translate 0.8s var(--ease-out), scale 0.8s var(--ease-out); transition-delay: calc(var(--i) * 90ms); }
+
+  /* product cards */
+  .pcards { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(28px, 3vw, 40px) clamp(16px, 2vw, 28px); margin: 0; padding: 0; list-style: none; }
+  .pcard--feature { grid-column: 1 / -1; }
+  .pcard__link { display: grid; gap: 10px; color: inherit; }
+  .pcard__media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 14px; background: var(--night-2); outline: 1px solid var(--line); }
+  .pcard--feature .pcard__media { aspect-ratio: 16 / 7.5; }
+  .pcard__media img, .pcard__media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: scale 0.9s var(--ease-out), opacity 0.6s; }
+  .pcard__media video { opacity: 0; }
+  .pcard__link[data-autoplay-video] .pcard__media video { opacity: 1; }
+  .pcard__link:hover .pcard__media img { scale: 1.035; }
+  .pcard__blank { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; background: radial-gradient(120% 90% at 30% 20%, #1d262e, var(--night-2)); }
+  .pcard__blank span { font-family: var(--font-display); font-size: clamp(1.3rem, 0.8rem + 1.4vw, 2rem); letter-spacing: -0.02em; color: rgba(208, 197, 171, 0.35); text-align: center; }
+  .pcard__soon { position: absolute; left: 14px; bottom: 14px; padding: 6px 12px; border-radius: 999px; background: rgba(17, 16, 13, 0.75); color: var(--fog); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .pcard__meta { margin-top: 6px; }
+  .pcard__title { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: var(--fs-2); line-height: 1.15; letter-spacing: -0.02em; }
+  .pcard--feature .pcard__title { font-size: var(--fs-4); max-width: 22ch; }
+  .pcard__result { color: var(--accent); font-weight: 500; }
+  .pcard__cta { justify-self: start; margin-top: 4px; padding-bottom: 2px; border-bottom: 1px solid currentColor; font-weight: 500; }
+  .pcard__link:hover .pcard__cta span { display: inline-block; translate: 4px 0; transition: translate 0.3s; }
+  @media (max-width: 960px) { .pcards { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .pcards { grid-template-columns: 1fr; } .pcard--feature .pcard__media { aspect-ratio: 4 / 3; } }
+
+  /* graphic index */
+  .gindex { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+  .grow { border-bottom: 1px solid var(--line); }
+  .grow__btn { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 0.9fr) 110px 110px; align-items: baseline; gap: 16px; width: 100%; padding: clamp(18px, 2.4vw, 30px) 4px; text-align: left; transition: color 0.4s, padding 0.5s var(--ease-out); }
+  .grow__btn:disabled { cursor: default; opacity: 0.55; }
+  .grow__num, .grow__year, .grow__count { color: var(--dim); font-size: var(--type-small); font-variant-numeric: tabular-nums; }
+  .grow__count { text-align: right; }
+  .grow__name { font-family: var(--font-display); font-weight: var(--fw-display); font-size: clamp(1.8rem, 1rem + 2.6vw, 3.6rem); line-height: 1; letter-spacing: var(--tracking-display); }
+  .grow__type { color: var(--dim); }
+  .gindex:global(.is-hovering) .grow__btn:not(:global(.is-active)) { color: rgba(208, 197, 171, 0.32); }
+  .grow__btn:not(:disabled):hover { padding-left: 16px; }
+  .grow__thumbs { display: none; }
+  .ph { outline: 1px dashed currentColor; outline-offset: 3px; }
+
+  /* the floating preview follows the cursor (desktop) */
+  .gpreview { position: fixed; left: 0; top: 0; z-index: 30; width: clamp(220px, 22vw, 340px); aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden; pointer-events: none; opacity: 0; scale: 0.85; transition: opacity 0.35s var(--ease-out), scale 0.45s var(--ease-out); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8); }
+  .gpreview:global(.is-on) { opacity: 1; scale: 1; }
+  .gpreview img { width: 100%; height: 100%; object-fit: cover; }
+
+  @media (max-width: 760px), (hover: none) {
+    .grow__btn { grid-template-columns: 40px 1fr auto; row-gap: 4px; }
+    .grow__type { grid-column: 2; }
+    .grow__year { display: none; }
+    .grow__count { grid-column: 3; grid-row: 1; }
+    .grow__thumbs { display: flex; gap: 8px; margin: 0 0 20px 56px; padding: 0; list-style: none; overflow-x: auto; }
+    .grow__thumbs img { width: 92px; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 8px; }
+    .gpreview { display: none; }
+  }
+
+  /* gallery */
+  .gallery { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: var(--night); color: var(--fog); opacity: 0; transition: opacity 0.45s var(--ease-out); }
+  .gallery:global(.is-in) { opacity: 1; }
+  .gallery::backdrop { background: var(--night); }
+  .gallery[open] { display: grid; grid-template-rows: auto 1fr auto; }
+  .gallery__top { display: flex; justify-content: space-between; align-items: center; padding: 18px var(--gutter); }
+  .gallery__close { display: inline-flex; gap: 10px; align-items: center; min-height: 44px; padding: 0 18px; border: 1px solid rgba(208, 197, 171, 0.35); border-radius: 999px; color: var(--fog); }
+  .gallery__stage { display: grid; place-items: center; gap: 14px; min-height: 0; margin: 0; padding: 0 clamp(64px, 8vw, 120px); }
+  .gallery__stage img { max-width: 100%; max-height: calc(100svh - 220px); width: auto; height: auto; border-radius: 10px; box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.9); transition: opacity 0.3s, translate 0.45s var(--ease-out); }
+  .gallery__stage img:global(.is-swapping) { opacity: 0; translate: calc(var(--dir, 1) * 24px) 0; }
+  .gallery__stage figcaption { color: var(--dim); text-align: center; }
+  .gallery__count { margin-left: 10px; font-variant-numeric: tabular-nums; }
+  .gallery__note { max-width: 60ch; margin: 0 auto; padding: 0 var(--gutter) 24px; color: var(--dim); text-align: center; font-size: var(--type-small); }
+  .gallery__nav { position: absolute; top: 50%; translate: 0 -50%; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(208, 197, 171, 0.3); color: var(--fog); font-size: 18px; transition: background 0.3s, color 0.3s; }
+  .gallery__nav:hover { background: var(--fog); color: var(--night); }
+  .gallery__nav--prev { left: var(--gutter); }
+  .gallery__nav--next { right: var(--gutter); }
+  @media (max-width: 640px) { .gallery__stage { padding: 0 12px; } .gallery__nav { top: auto; bottom: 18px; translate: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .work__panel [data-item] { opacity: 1; translate: none; scale: none; }
+    .gpreview { display: none; }
+    .pcard__link[data-autoplay-video] .pcard__media video { opacity: 0; }
+  }
+</style>
+
+<script>
+  import { initWork } from '../scripts/work';
+  initWork();
+</script>

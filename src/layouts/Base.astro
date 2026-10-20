@@ -2,7 +2,9 @@
 import 'lenis/dist/lenis.css';
 import '../styles/global.css';
 import { site } from '../content/site';
-const title = `${site.displayName} — ${site.role}`;
+interface Props { title?: string; description?: string }
+const title = Astro.props.title ?? `${site.displayName} — ${site.role}`;
+const description = Astro.props.description ?? site.description;
 ---
 
 <!doctype html>
@@ -11,10 +13,10 @@ const title = `${site.displayName} — ${site.role}`;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <meta name="description" content={site.description} />
-    <meta name="theme-color" content="#0b0e12" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#11100d" />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={site.description} />
+    <meta property="og:description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,6 +25,7 @@ const title = `${site.displayName} — ${site.role}`;
       href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500&display=swap"
     />
     <script is:inline>document.documentElement.classList.add("js");</script>
+    <slot name="head" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
