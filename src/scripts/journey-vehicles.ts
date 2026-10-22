@@ -133,7 +133,7 @@ export function createVehicleLayer(map: MLMap) {
   rig.add(sun, sun.target);
   rig.matrixAutoUpdate = false;
 
-  const state = { lng: 0, lat: 0, heading: 0, kind: 'danfo' as VehicleKind, alt: 0, bank: 0, visible: false };
+  const state = { lng: 0, lat: 0, heading: 0, kind: 'danfo' as VehicleKind, alt: 0, bank: 0, tilt: 0, visible: false };
   let renderer: THREE.WebGLRenderer | null = null;
 
   const layer: CustomLayerInterface = {
@@ -154,10 +154,11 @@ export function createVehicleLayer(map: MLMap) {
       const lengthM = PX[state.kind] * mpp;
       const altM = state.alt * lengthM;
 
-      // local model transform: heading (clockwise from north) + banking for the plane
+      // local model transform: heading (clockwise from north), then roll (bank) and pitch (tilt)
       const local = new THREE.Matrix4()
         .makeRotationZ(-rad(state.heading))
-        .multiply(new THREE.Matrix4().makeRotationY(rad(state.bank)));
+        .multiply(new THREE.Matrix4().makeRotationY(rad(state.bank)))
+        .multiply(new THREE.Matrix4().makeRotationX(rad(state.tilt))); // nose up/down
 
       // flat (mercator): x east, y south, z up in mercator units
       const mx = (state.lng + 180) / 360;

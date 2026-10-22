@@ -14,10 +14,13 @@ import { unlockSound, takeoff, stopTakeoff, honk, isMuted, setMuted, startMusic,
 
 type LngLat = [number, number];
 type Stop = { title: string; slug: string; when: string; pos: LngLat; zoom: number; by?: 'danfo' | 'plane' | 'car'; route?: string; midZoom?: number };
-type Leg = { by: 'danfo' | 'plane' | 'car' | null; coords: LngLat[]; cum: number[]; total: number; midZoom: number };
+type Leg = { by: 'danfo' | 'plane' | 'car' | null; coords: LngLat[]; cum: number[]; total: number; midZoom: number; dist: (t: number) => number };
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const smooth = (t: number) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
+const smoother = (t: number) => { t = Math.min(1, Math.max(0, t)); return t * t * t * (t * (t * 6 - 15) + 10); };
+const angleDiff = (a: number, b: number) => ((((b - a) % 360) + 540) % 360) - 180;
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const rad = (d: number) => (d * Math.PI) / 180;
 const deg = (r: number) => (r * 180) / Math.PI;
@@ -75,22 +78,60 @@ export function initJourney() {
     const coords: LngLat[] = s.by === 'plane' ? greatCircle(prev, s.pos) : s.route && R[s.route] ? smoothLine(R[s.route].coords) : [prev, s.pos];
     const cum = [0];
     for (let j = 1; j < coords.length; j++) cum.push(cum[j - 1] + km(coords[j - 1], coords[j]));
-    return { by: s.by ?? null, coords, cum, total: cum[cum.length - 1] || 1e-6, midZoom: s.midZoom ?? Math.min(stops[i - 1].zoom, s.zoom) };
+    const leg: Leg = { by: s.by ?? null, coords, cum, total: cum[cum.length - 1] || 1e-6, midZoom: s.midZoom ?? Math.min(stops[i - 1].zoom, s.zoom), dist: (t) => t };
+    leg.dist = leg.by === 'plane' ? flightDist : roadProfile(leg);
+    return leg;
   });
-  const at = (leg: Leg, t: number): { p: LngLat; b: number } => {
+  /**
+   * Flight: a slow take-off roll down the runway, a long climb-cruise-descent, and a
+   * landing roll — time fraction in, distance fraction out (very flat at both ends).
+   */
+  function flightDist(t: number) { return smoother(smooth(t)); }
+  /**
+   * Roads: the vehicle brakes into bends and speeds up on straights. Samples the
+   * route's curvature, turns it into a speed (looking ahead so braking starts before
+   * the bend), integrates time, and inverts it: time fraction → distance fraction.
+   */
+  function roadProfile(leg: Leg) {
+    const N = 240, ds = leg.total / N;
+    if (leg.total < 0.05) return (t: number) => t;
+    const head: number[] = [];
+    for (let k = 0; k <= N; k++) head.push(steerAt(leg, k / N));
+    const v: number[] = [];
+    for (let k = 0; k <= N; k++) {
+      const a = head[Math.max(0, k - 1)], b = head[Math.min(N, k + 1)];
+      const curv = Math.abs(angleDiff(a, b)) / (2 * ds); // degrees per km
+      v.push(1 / (1 + curv / 55));
+    }
+    const look = Math.max(1, Math.round(0.35 / ds)); // brake ~350 m before a bend
+    const vs = v.map((_, k) => Math.max(0.32, Math.min(...v.slice(k, k + look + 1))));
+    const T = [0];
+    for (let k = 1; k <= N; k++) T.push(T[k - 1] + ds / ((vs[k - 1] + vs[k]) / 2));
+    const total = T[N];
+    for (let k = 0; k <= N; k++) T[k] /= total;
+    return (t: number) => {
+      if (t <= 0) return 0;
+      if (t >= 1) return 1;
+      let lo = 0, hi = N;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T[m] <= t) lo = m; else hi = m; }
+      return (lo + (t - T[lo]) / ((T[hi] - T[lo]) || 1e-9)) / N;
+    };
+  }
+  function steerAt(leg: Leg, t: number) {
+    const w = Math.min(0.12, leg.total * 0.02) / leg.total;
+    const a = at(leg, clamp(t - w)).p, b = at(leg, clamp(t + w)).p;
+    return a[0] === b[0] && a[1] === b[1] ? at(leg, t).b : bearing(a, b);
+  }
+  function at(leg: Leg, t: number): { p: LngLat; b: number } {
     const d = t * leg.total;
     let j = 1;
     while (j < leg.cum.length - 1 && leg.cum[j] < d) j++;
     const a = leg.coords[j - 1], b = leg.coords[j];
     const f = clamp((d - leg.cum[j - 1]) / ((leg.cum[j] - leg.cum[j - 1]) || 1e-6));
     return { p: [lerp(a[0], b[0], f), lerp(a[1], b[1], f)], b: bearing(a, b) };
-  };
+  }
   /** Heading that looks a little ahead on the road, so the vehicle steers through bends. */
-  const steer = (leg: Leg, t: number) => {
-    const w = Math.min(0.12, leg.total * 0.02) / leg.total; // ~120 m either side
-    const a = at(leg, clamp(t - w)).p, b = at(leg, clamp(t + w)).p;
-    return a[0] === b[0] && a[1] === b[1] ? at(leg, t).b : bearing(a, b);
-  };
+  const steer = steerAt;
   const doneLine = (k: number, t: number): LngLat[] => {
     const out: LngLat[] = [stops[0].pos];
     for (let i = 1; i < legs.length; i++) {
@@ -131,7 +172,7 @@ export function initJourney() {
   let tween: { from: number; to: number; start: number; dur: number } | null = null;
   let playing = false;
   let playTimer = 0;
-  const cam = { lng: OVERVIEW.center[0], lat: OVERVIEW.center[1], zoom: OVERVIEW.zoom, pitch: 0, heading: 0, bearing: 0 };
+  const cam = { lng: OVERVIEW.center[0], lat: OVERVIEW.center[1], zoom: OVERVIEW.zoom, pitch: 0, heading: 0, bearing: 0, ox: 0, oy: 0 };
   let primed = false; // first frame snaps the camera instead of easing in
   // the camera leans gently towards the mouse (fine pointers only)
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -144,14 +185,14 @@ export function initJourney() {
     if (i === 0) return 2600;
     const leg = legs[i];
     if (!leg || leg.total < 0.05) return 1400;
-    if (leg.by === 'plane') return 4600;
+    if (leg.by === 'plane') return 7000;
     return clamp(1700 + leg.total * 14, 1900, 3600);
   };
   const durationFor = (from: number, to: number) => {
     const [a, b] = from < to ? [from, to] : [to, from];
     let sum = 0;
     for (let i = Math.floor(a); i < Math.ceil(b); i++) sum += legDuration(i);
-    return Math.min(sum, 7000);
+    return Math.min(sum, 8000);
   };
 
   const goTo = (k: number) => {
@@ -178,7 +219,7 @@ export function initJourney() {
 
   // ── Where the camera and vehicle want to be at progress p
   const view = (q: number) => {
-    let center: LngLat, zoom: number, pitch: number, vpos: LngLat, vbear = 0, kind = 'danfo', alt = 0;
+    let center: LngLat, zoom: number, pitch: number, vpos: LngLat, vbear = 0, kind = 'danfo', alt = 0, tilt = 0, chase = 0;
     const i = Math.min(Math.floor(q), S - 1);
     const f = q - i;
     if (q <= 1 && i === 0) {
@@ -194,14 +235,29 @@ export function initJourney() {
       const leg = legs[i];
       const a = stops[i - 1], b = stops[i] ?? a;
       if (leg && leg.total > 0.05 && f > 0 && q < S) {
-        const v = at(leg, f);
-        vpos = v.p; vbear = leg.by === 'plane' ? v.b : steer(leg, f); kind = leg.by ?? 'car';
+        const plane = leg.by === 'plane';
+        const d = leg.dist(f); // distance along the route for this moment in time
+        const v = at(leg, d);
+        vpos = v.p; vbear = plane ? v.b : steer(leg, d); kind = leg.by ?? 'car';
         center = vpos;
+        // flights hold the camera low during the take-off and landing rolls, then pull out
+        const fz = plane ? smooth((f - 0.07) / 0.86) : f;
         const zc = 2 * leg.midZoom - (a.zoom + b.zoom) / 2;
-        zoom = (1 - f) ** 2 * a.zoom + 2 * f * (1 - f) * zc + f ** 2 * b.zoom;
-        const dip = Math.sin(Math.PI * f);
-        pitch = lerp(pitchAt(i), pitchAt(i + 1), f) * (1 - (leg.by === 'plane' ? 0.9 : 0.3) * dip);
-        if (leg.by === 'plane') alt = 0.25 + 1.2 * dip;
+        zoom = (1 - fz) ** 2 * a.zoom + 2 * fz * (1 - fz) * zc + fz ** 2 * b.zoom;
+        const dip = Math.sin(Math.PI * fz);
+        pitch = lerp(pitchAt(i), pitchAt(i + 1), fz) * (1 - (plane ? 0.9 : 0.3) * dip);
+        if (plane) {
+          // wheels on the runway → climb → cruise → descend → touch down
+          const up = smooth((f - 0.06) / 0.16), down = smooth((f - 0.78) / 0.15);
+          alt = 1.45 * up * (1 - down);
+          tilt = 9 * Math.sin(Math.PI * clamp((f - 0.06) / 0.16)) - 5 * Math.sin(Math.PI * clamp((f - 0.78) / 0.15));
+        } else {
+          // chase camera: swing in behind the vehicle mid-leg, and look a little ahead of it
+          chase = Math.sin(Math.PI * f) ** 0.6;
+          const mpp = (78271.5 * Math.cos(rad(vpos[1]))) / 2 ** zoom;
+          const lead = Math.min(110, window.innerWidth * 0.08) * mpp * chase; // metres ahead; less on narrow screens
+          center = [vpos[0] + (lead * Math.sin(rad(vbear))) / (111320 * Math.cos(rad(vpos[1]))), vpos[1] + (lead * Math.cos(rad(vbear))) / 111320];
+        }
       } else {
         const s = q >= S ? stops[S - 1] : f < 0.5 ? a : b;
         const k = stops.indexOf(s) + 1;
@@ -212,8 +268,10 @@ export function initJourney() {
         vbear = nextLeg ? bearing(nextLeg.coords[0], nextLeg.coords[Math.min(1, nextLeg.coords.length - 1)]) : prevLeg ? at(prevLeg, 1).b : 0;
       }
     }
-    const camBearing = CAM_BEARING * clamp(q);
-    return { center, zoom, pitch, vpos, vbear, kind, alt, camBearing };
+    // at the stops the map rests at the Sobha angle; on the road it turns to follow the vehicle
+    const base = CAM_BEARING * clamp(q);
+    const camBearing = base + angleDiff(base, vbear) * 0.8 * chase;
+    return { center, zoom, pitch, vpos, vbear, kind, alt, tilt, camBearing };
   };
 
   // ── Render loop (runs only while the map is open)
@@ -222,6 +280,7 @@ export function initJourney() {
   let ready = false;
   let loop = 0;
   let last = 0;
+  let roll = 0, tiltNow = 0;
   let planeLeg = -1;
   const angleLerp = (a: number, b: number, t: number) => a + ((((b - a) % 360) + 540) % 360 - 180) * t;
 
@@ -243,12 +302,21 @@ export function initJourney() {
     // camera follows through a low-pass filter: smooth on twisty roads, exact when settled
     const k = primed ? 1 - Math.exp(-dt / 0.16) : 1;
     primed = true;
-    cam.lng = lerp(cam.lng, v.center[0], k);
-    cam.lat = lerp(cam.lat, v.center[1], k);
+    // the vehicle stays pinned; only the framing around it (look-ahead, stop view) is smoothed
+    cam.ox = lerp(cam.ox, v.center[0] - v.vpos[0], k);
+    cam.oy = lerp(cam.oy, v.center[1] - v.vpos[1], k);
+    cam.lng = v.vpos[0] + cam.ox;
+    cam.lat = v.vpos[1] + cam.oy;
     cam.zoom = lerp(cam.zoom, v.zoom, k);
     cam.pitch = lerp(cam.pitch, v.pitch, k);
-    cam.bearing = lerp(cam.bearing, v.camBearing, k);
+    cam.bearing = angleLerp(cam.bearing, v.camBearing, primed ? 1 - Math.exp(-dt / 0.9) : 1); // turns slowly, like a crane
+    const prevHeading = cam.heading;
     cam.heading = angleLerp(cam.heading, v.vbear, primed ? 1 - Math.exp(-dt / 0.22) : 1);
+    // body roll: lean out of turns on the road, bank into them in the air
+    const yaw = dt > 0 ? angleDiff(prevHeading, cam.heading) / dt : 0; // degrees per second
+    const rollTarget = v.kind === 'plane' ? clamp(yaw * 0.5, -18, 18) : clamp(-yaw * 0.06, -5, 5);
+    roll = lerp(roll, rollTarget, 1 - Math.exp(-dt / 0.25));
+    tiltNow = lerp(tiltNow, v.tilt, 1 - Math.exp(-dt / 0.3));
     const km2 = 1 - Math.exp(-dt / 0.45); // the lean follows the mouse slowly, like a floating camera
     mouse.sx = lerp(mouse.sx, mouse.x, km2);
     mouse.sy = lerp(mouse.sy, mouse.y, km2);
@@ -269,13 +337,13 @@ export function initJourney() {
     const hop = hopStart < 0 ? 0 : Math.sin(Math.PI * clamp((now - hopStart) / 380)) * 0.35;
     if (hopStart >= 0 && now - hopStart > 380) hopStart = -1;
     // the vehicle appears once the journey starts (keeps the opening globe clean)
-    vehicles.set({ lng: v.vpos[0], lat: v.vpos[1], heading: cam.heading, kind: v.kind, alt: v.alt + hop, visible: p > 0.45 });
+    vehicles.set({ lng: v.vpos[0], lat: v.vpos[1], heading: cam.heading, kind: v.kind, alt: v.alt + hop, bank: roll, tilt: tiltNow, visible: p > 0.45 });
     lastV = { lng: v.vpos[0], lat: v.vpos[1], kind: v.kind, visible: p > 0.45 };
 
     const src = map.getSource('route-done') as GeoJSONSource | undefined;
     if (src) {
       const kLeg = p < 1 ? 0 : p >= S ? S : Math.floor(p);
-      const tLeg = p < 1 || p >= S ? 0 : p - Math.floor(p);
+      const tLeg = p < 1 || p >= S ? 0 : (legs[kLeg]?.dist(p - Math.floor(p)) ?? 0);
       src.setData({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: doneLine(kLeg, tLeg) } });
     }
   };
@@ -409,6 +477,7 @@ export function initJourney() {
       map.addSource('route-all', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: fullLine } } });
       map.addSource('route-done', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [stops[0].pos] } } });
       map.addLayer({ id: 'route-all', type: 'line', source: 'route-all', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': 'rgba(232,236,238,0.28)', 'line-width': 2, 'line-dasharray': [1.5, 2] } });
+      map.addLayer({ id: 'route-glow', type: 'line', source: 'route-done', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#f2c22e', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 8, 12, 14, 16, 24], 'line-blur': ['interpolate', ['linear'], ['zoom'], 3, 6, 16, 18], 'line-opacity': 0.28 } });
       map.addLayer({ id: 'route-done', type: 'line', source: 'route-done', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#f2c22e', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 2, 12, 4, 16, 7], 'line-opacity': 0.95 } });
       stops.forEach((s) => {
         const el = document.createElement('div');
