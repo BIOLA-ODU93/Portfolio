@@ -84,7 +84,7 @@ export const about = {
   results: [
     { value: '40%', label: 'fewer support tickets', where: 'Sky Capital · fintech' },
     { value: '50%', label: 'higher user retention', where: 'Sky Capital · fintech' },
-    { value: '3', label: 'countries designed for', where: 'Lagos · Sierra Leone · The Gambia' },
+    { value: '4', label: 'countries designed for', where: 'Nigeria · Sierra Leone · The Gambia · Ireland' },
     { value: '9+', label: 'years in design', where: 'Brand, graphic & product' },
   ],
   best: {

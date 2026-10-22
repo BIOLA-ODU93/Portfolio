@@ -40,7 +40,10 @@ const email = site.email.replace(/[[\]]/g, '');
     <a class="hero__logo" href="#top">
       <img src="/brand/signature.png" alt={`${site.displayName} — home`} width="115" height="88" />
     </a>
-
+    <!-- phones only: the corner journey card would cover the headline, so the journey sits in the top bar -->
+    <button class="hero__journey" type="button" data-journey-open aria-haspopup="dialog" aria-controls="journey-map">
+      <span class="hero__journey-dot" aria-hidden="true"></span>My journey
+    </button>
   </header>
 
   <div class="hero__center">
@@ -217,6 +220,16 @@ const email = site.email.replace(/[[\]]/g, '');
   }
   .hero__logo img { width: auto; height: clamp(56px, 6.1vw, 88px); transition: opacity 0.3s; }
   .hero__logo:hover img { opacity: 0.75; }
+  .hero__journey { display: none; align-items: center; gap: 8px; padding: 10px 16px; border: 1px solid rgba(208, 197, 171, 0.3); border-radius: 999px; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fog); transition: background 0.3s, color 0.3s; }
+  .hero__journey:hover { background: var(--fog); color: var(--night); }
+  .hero__journey-dot { width: 7px; height: 7px; border-radius: 50%; background: #f2c22e; box-shadow: 0 0 0 0 rgba(242, 194, 46, 0.6); animation: journey-dot 2.4s ease-out infinite; }
+  @keyframes journey-dot { 70% { box-shadow: 0 0 0 7px rgba(242, 194, 46, 0); } 100% { box-shadow: 0 0 0 0 rgba(242, 194, 46, 0); } }
+  @media (max-width: 640px) {
+    .hero__header { display: flex; justify-content: space-between; }
+    .hero__logo img { height: 52px; }
+    .hero__journey { display: inline-flex; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hero__journey-dot { animation: none; } }
   .ph { outline: 1px dashed currentColor; outline-offset: 4px; opacity: 0.85; }
 
   /* ── Headline ── */

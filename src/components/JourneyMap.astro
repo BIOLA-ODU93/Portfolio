@@ -209,6 +209,9 @@ const rich = (s: string) =>
   .mapcard:hover .mapcard__go { background: var(--fog); color: var(--night); transform: rotate(45deg); }
   .mapcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
+  /* phones: no corner card over the hero headline (the hero menu has "My journey"); the round button still appears further down */
+  @media (max-width: 640px) { .mapcard:not(:global(.is-compact)) { display: none; } }
+
   /* Past the hero the card tucks into a small round "3D" button, so it never covers content */
   .mapcard__mini { display: none; }
   .mapcard:global(.is-compact) {
