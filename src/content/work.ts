@@ -172,7 +172,7 @@ export const work = {
       medium: 'Two-sided marketplace',
       year: '2026',
       title: 'A research marketplace, from waitlist to platform',
-      result: 'Live waitlist at ansarr.com',
+      result: 'Platform live at ansarr.com',
       image: null,
       href: null,
     },

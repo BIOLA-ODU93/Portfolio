@@ -114,28 +114,39 @@ export type Stop = {
   points: string[];
   metrics?: string[];
   links?: { label: string; href: string }[];
+  /** short id for the stop's own link, e.g. /#sky-capital */
+  slug: string;
+  /** optional photo for the stop panel (otherwise a quiet placeholder) */
+  photo?: string;
+  /** case studies linked from the stop panel */
+  caseStudies?: { label: string; href: string }[];
 };
 
 export const journey = {
   kicker: 'The journey',
-  title: 'From Nigeria to Dublin',
+  title: 'From Lagos to Dublin',
   intro: 'Travel my path — by danfo, by plane, by car — and see what changed because of the work.',
   stops: [
     {
       when: '2010 – 2014',
       title: 'Babcock University',
+      slug: 'babcock',
+      photo: '/images/journey/babcock.webp',
       role: 'BSc Mass Communication',
       place: 'Ilishan-Remo, Ogun State',
       pos: [3.7224, 6.8901],
       zoom: 12,
       points: [
         'Where it started: storytelling, media and how messages land with people.',
+        'In 300 Level I was elected Social Director of my department, my first taste of bringing people together around an idea.',
         '2013: first design internship at Lawson Thomas & Colleague, working alongside an art director and learning the Adobe tools.',
       ],
     },
     {
       when: '2015 – 2016',
       title: 'NYSC',
+      slug: 'nysc',
+      photo: '/images/journey/nysc.webp',
       role: 'Fine Art Teacher · Ibadan Grammar School',
       place: 'Ibadan, Oyo State',
       pos: [3.8972, 7.3784],
@@ -143,11 +154,13 @@ export const journey = {
       by: 'danfo',
       route: 'babcock-ibadan',
       midZoom: 9.4,
-      points: ['A year of national service, teaching Fine Art.'],
+      points: ['A year of national service, teaching Fine Art at Ibadan Grammar School.', 'I also played in the NYSC Ibadan band, putting my music to work in the corps’ community service.'],
     },
     {
       when: '2017 – 2022',
       title: 'AIICO Insurance',
+      slug: 'aiico',
+      photo: '/images/journey/aiico.webp',
       role: 'Junior Designer',
       place: 'Victoria Island, Lagos',
       pos: [3.4185, 6.4295],
@@ -163,6 +176,8 @@ export const journey = {
     {
       when: '2022 – 2024',
       title: 'Sky Capital & Allied Financial Services',
+      slug: 'sky-capital',
+      photo: '/images/journey/sky-capital.webp',
       role: 'Product Designer & Graphic Designer',
       place: 'Victoria Island, Lagos',
       pos: [3.426, 6.43],
@@ -174,11 +189,12 @@ export const journey = {
         'Grew from designing for the Lagos office to leading design for the Lagos, Sierra Leone and The Gambia branches.',
         'Redesigned onboarding, transaction, reporting and account flows across web and mobile.',
       ],
-      metrics: ['40% fewer support tickets', '50% higher retention'],
+      metrics: ['40% fewer support tickets', '50% higher retention', '3 countries'],
     },
     {
       when: 'Oct 2024',
       title: 'Leaving Lagos',
+      slug: 'leaving-lagos',
       role: 'Murtala Muhammed International Airport',
       place: 'Ikeja, Lagos',
       pos: [3.3209, 6.5743],
@@ -191,6 +207,7 @@ export const journey = {
     {
       when: 'Oct 2024',
       title: 'Hello, Dublin',
+      slug: 'hello-dublin',
       role: 'Dublin Airport',
       place: 'Dublin, Ireland',
       pos: [-6.2473, 53.4283],
@@ -202,6 +219,7 @@ export const journey = {
     {
       when: 'Oct 2024 – Oct 2025',
       title: 'Griffith College Dublin',
+      slug: 'griffith',
       role: 'MSc Interactive Digital Media',
       place: 'Dublin, Ireland',
       pos: [-6.2782, 53.3306],
@@ -214,6 +232,7 @@ export const journey = {
     {
       when: 'Jan – Jul 2025',
       title: 'Gontrel',
+      slug: 'gontrel',
       role: 'Junior Product Designer (Contract)',
       place: 'Dublin, Ireland',
       pos: [-6.2607, 53.3505],
@@ -229,6 +248,7 @@ export const journey = {
     {
       when: 'Jul 2025 – Now',
       title: 'King’s Court',
+      slug: 'kings-court',
       role: 'Product & Graphic Designer',
       place: 'Dublin, Ireland',
       pos: [-6.2607, 53.3505],
@@ -238,11 +258,16 @@ export const journey = {
     {
       when: 'Now',
       title: 'Shipping & building',
+      slug: 'shipping',
       role: 'Lead Designer on live products',
       place: 'Dublin & online',
       pos: [-6.2607, 53.3505],
       zoom: 13.5,
-      points: ['Luciana — AI virtual try-on for premium fashion.', 'Praisetival Ireland — events and livestream platform.', 'Ansarr — two-sided research marketplace.'],
+      points: ['Live products I’ve designed, from a festival site rebuilt in two weeks to fashion e-commerce with AI try-on and a research marketplace.'],
+      caseStudies: [
+        { label: 'Praisetival Ireland', href: '/work/praisetival' },
+        { label: 'Luciana', href: '/work/luciana' },
+      ],
       links: [
         { label: 'shop-luciana.co', href: 'https://shop-luciana.co' },
         { label: 'praisetivalireland.ie', href: 'https://praisetivalireland.ie' },

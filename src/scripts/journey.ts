@@ -10,10 +10,10 @@ import type { Map as MLMap, GeoJSONSource } from 'maplibre-gl';
 import routes from '../data/journey-routes.json';
 import { journeyStyle } from './journey-style';
 import { pauseScroll, resumeScroll } from './smooth';
-import { unlockSound, takeoff, stopTakeoff, honk, isMuted, setMuted } from './journey-sound';
+import { unlockSound, takeoff, stopTakeoff, honk, isMuted, setMuted, startMusic, stopMusic } from './journey-sound';
 
 type LngLat = [number, number];
-type Stop = { title: string; pos: LngLat; zoom: number; by?: 'danfo' | 'plane' | 'car'; route?: string; midZoom?: number };
+type Stop = { title: string; slug: string; when: string; pos: LngLat; zoom: number; by?: 'danfo' | 'plane' | 'car'; route?: string; midZoom?: number };
 type Leg = { by: 'danfo' | 'plane' | 'car' | null; coords: LngLat[]; cum: number[]; total: number; midZoom: number };
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -117,6 +117,8 @@ export function initJourney() {
   const cards = Array.from(dialog.querySelectorAll<HTMLElement>('[data-jcard]'));
   const navBtns = Array.from(dialog.querySelectorAll<HTMLButtonElement>('[data-jgoto]'));
   const pins: HTMLElement[] = [];
+  let openIdx = -1; // stop whose panel is open
+  let pendingOpen = -1; // stop whose panel opens on arrival
 
   // ── Motion state
   const OVERVIEW = { center: [-1.5, 28] as LngLat, zoom: 2.25 };
@@ -154,6 +156,7 @@ export function initJourney() {
 
   const goTo = (k: number) => {
     k = Math.round(clamp(k, 0, S));
+    if (openIdx >= 0 && k !== openIdx + 1) closePanel();
     if (k === target && !tween) return;
     target = k;
     tween = reduce.matches ? null : { from: p, to: k, start: performance.now(), dur: durationFor(p, k) };
@@ -164,7 +167,6 @@ export function initJourney() {
   const syncUI = () => {
     const settled = !tween;
     const here = settled ? Math.round(p) : -1;
-    cards.forEach((el, i) => el.classList.toggle('is-active', i === here - 1));
     pins.forEach((el, i) => el.classList.toggle('is-active', i === target - 1));
     navBtns.forEach((b, i) => b.setAttribute('aria-current', String(i === target - 1)));
     if (count) count.textContent = String(target).padStart(2, '0');
@@ -230,7 +232,7 @@ export function initJourney() {
     if (tween) {
       const t = clamp((now - tween.start) / tween.dur);
       p = tween.from + (tween.to - tween.from) * easeInOut(t);
-      if (t >= 1) { p = tween.to; tween = null; syncUI(); schedulePlay(); }
+      if (t >= 1) { p = tween.to; tween = null; syncUI(); if (pendingOpen === target - 1) { const i = pendingOpen; pendingOpen = -1; openPanel(i); } else schedulePlay(); }
     }
     if (intro) { const o = clamp(1 - p * 2.2); intro.style.opacity = String(o); intro.style.transform = `translateY(${(o - 1) * 24}px)`; }
     if (!ready || !map || !vehicles) return;
@@ -287,6 +289,40 @@ export function initJourney() {
   };
   const stopPlay = () => { if (playing) { playing = false; clearTimeout(playTimer); syncUI(); } };
 
+  // ── Stop panels (Sobha-style): the + on a stop fades its panel in; the journey pauses while it's open
+  function openPanel(i: number) {
+    stopPlay();
+    openIdx = i;
+    cards.forEach((el, k) => { el.classList.toggle('is-open', k === i); el.setAttribute('aria-hidden', String(k !== i)); });
+    pins.forEach((el, k) => el.classList.toggle('is-open', k === i));
+    dialog.classList.add('has-panel');
+    history.replaceState(null, '', `#${stops[i].slug}`);
+    window.setTimeout(() => cards[i]?.querySelector<HTMLElement>('[data-jpanel-close]')?.focus({ preventScroll: true }), 50);
+  }
+  function closePanel() {
+    if (openIdx < 0) return;
+    const i = openIdx;
+    openIdx = -1;
+    cards.forEach((el) => { el.classList.remove('is-open'); el.setAttribute('aria-hidden', 'true'); });
+    pins.forEach((el) => el.classList.remove('is-open'));
+    dialog.classList.remove('has-panel');
+    history.replaceState(null, '', location.pathname + location.search);
+    if (dialog.contains(document.activeElement)) pins[i]?.querySelector<HTMLElement>('.jstop__dot')?.focus({ preventScroll: true });
+  }
+  const openStop = (i: number) => {
+    if (openIdx === i) return closePanel();
+    if (!tween && target === i + 1) return openPanel(i);
+    closePanel();
+    stopPlay();
+    pendingOpen = i;
+    goTo(i + 1);
+  };
+  dialog.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest('[data-jpanel-close]')) closePanel();
+    else if (t.closest('[data-jpanel-next]')) { closePanel(); goTo(target + 1); }
+  });
+
   // ── Controls
   nextBtn?.addEventListener('click', () => { stopPlay(); goTo(target + 1); });
   prevBtn?.addEventListener('click', () => { stopPlay(); goTo(target - 1); });
@@ -298,10 +334,11 @@ export function initJourney() {
     syncUI();
   });
   dialog.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && openIdx >= 0) { e.preventDefault(); e.stopPropagation(); closePanel(); return; }
     const next = ['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key);
     const prev = ['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key);
     if (!next && !prev && e.key !== 'Home' && e.key !== 'End') return;
-    if ((e.target as HTMLElement).closest('a, button') && e.key === ' ') return;
+    if ((e.target as HTMLElement).closest('a, button, .jcard') && e.key === ' ') return;
     e.preventDefault();
     stopPlay();
     if (e.key === 'Home') goTo(0); else if (e.key === 'End') goTo(S); else goTo(target + (next ? 1 : -1));
@@ -309,6 +346,7 @@ export function initJourney() {
   // one scroll gesture = one stop (ignores the long tail of trackpad momentum)
   let wheelLock = 0;
   dialog.addEventListener('wheel', (e) => {
+    if ((e.target as HTMLElement).closest('.jcard')) return; // let a long panel scroll
     e.preventDefault();
     const now = performance.now();
     if (Math.abs(e.deltaY) < 6 || now < wheelLock) { wheelLock = Math.max(wheelLock, now + 120); return; }
@@ -319,6 +357,7 @@ export function initJourney() {
   let touchY = 0;
   dialog.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
   dialog.addEventListener('touchend', (e) => {
+    if ((e.target as HTMLElement).closest('.jcard')) return;
     const dy = touchY - e.changedTouches[0].clientY;
     if (Math.abs(dy) > 40) { stopPlay(); goTo(target + Math.sign(dy)); }
   });
@@ -331,7 +370,7 @@ export function initJourney() {
     const r = mapEl.getBoundingClientRect();
     return Math.hypot(e.clientX - r.left - pt.x, e.clientY - r.top - pt.y) < 46;
   };
-  const onControl = (e: Event) => !!(e.target as HTMLElement).closest('a, button, [data-jcard], .jnav, .jctrl');
+  const onControl = (e: Event) => !!(e.target as HTMLElement).closest('a, button, [data-jcard], .jnav, .jctrl, .jstop');
   stage.addEventListener('pointermove', (e) => {
     if (finePointer && !reduce.matches) {
       mouse.x = clamp((e.clientX / window.innerWidth) * 2 - 1, -1, 1);
@@ -341,6 +380,8 @@ export function initJourney() {
   });
   stage.addEventListener('pointerleave', () => { mouse.x = 0; mouse.y = 0; });
   stage.addEventListener('click', (e) => {
+    // a click on the open map (not the panel or a control) closes the panel
+    if (openIdx >= 0 && !onControl(e)) { closePanel(); return; }
     if (onControl(e) || lastV?.kind !== 'danfo' || !nearVehicle(e)) return;
     unlockSound();
     honk();
@@ -372,8 +413,13 @@ export function initJourney() {
       stops.forEach((s) => {
         const el = document.createElement('div');
         el.className = 'jstop';
-        el.innerHTML = '<span class="jstop__dot"></span><span class="jstop__label"></span>';
-        el.querySelector('.jstop__label')!.textContent = s.title;
+        el.innerHTML = '<button type="button" class="jstop__dot">+</button><span class="jstop__label"><span></span><small></small></span>';
+        const btn = el.querySelector<HTMLButtonElement>('.jstop__dot')!;
+        btn.setAttribute('aria-label', `${s.title}: open the story`);
+        el.querySelector('.jstop__label > span')!.textContent = s.title;
+        el.querySelector('.jstop__label small')!.textContent = s.when;
+        const idx = pins.length;
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); unlockSound(); openStop(idx); });
         new ml.Marker({ element: el }).setLngLat(s.pos).addTo(map!);
         pins.push(el);
       });
@@ -392,6 +438,8 @@ export function initJourney() {
 
   // ── Rewind to the opening globe, so every visit starts with the full journey
   const rewind = () => {
+    closePanel();
+    pendingOpen = -1;
     stopPlay();
     stopTakeoff();
     planeLeg = -1;
@@ -411,6 +459,7 @@ export function initJourney() {
   const open = () => {
     if (dialog.open) return;
     unlockSound(); // opening is a click, so browsers allow sound from here on
+    if (!reduce.matches) startMusic();
     dialog.showModal();
     document.documentElement.classList.add('journey-open');
     pauseScroll();
@@ -434,8 +483,9 @@ export function initJourney() {
     document.documentElement.classList.remove('journey-open');
     closing = window.setTimeout(() => { closing = 0; dialog.close(); }, FADE);
   };
-  dialog.addEventListener('cancel', (e) => { e.preventDefault(); close(); }); // Esc fades out too
+  dialog.addEventListener('cancel', (e) => { e.preventDefault(); if (openIdx >= 0) closePanel(); else close(); }); // Esc: panel first, then the map
   dialog.addEventListener('close', () => {
+    stopMusic();
     cancelAnimationFrame(loop);
     rewind();
     dialog.classList.remove('is-in');
@@ -449,6 +499,8 @@ export function initJourney() {
   });
   // coming back via the browser's back button restores the page as it was; start over instead
   window.addEventListener('pageshow', (e) => { if (e.persisted) rewind(); });
+  const linked = stops.findIndex((s) => `#${s.slug}` === location.hash);
   if (location.hash === '#journey') open();
+  else if (linked >= 0) { open(); pendingOpen = linked; goTo(linked + 1); } // a shared link to one stop
   syncUI();
 }

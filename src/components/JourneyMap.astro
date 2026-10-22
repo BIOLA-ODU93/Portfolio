@@ -32,7 +32,7 @@ const rich = (s: string) =>
     </span>
   </span>
   <span class="mapcard__mini" aria-hidden="true">3D<span class="mapcard__mini-dot"></span></span>
-  <span class="visually-hidden">Open the 3D map of my journey from Nigeria to Dublin</span>
+  <span class="visually-hidden">Open the 3D map of my journey from Lagos to Dublin</span>
 </button>
 
 <!-- Full-screen map -->
@@ -57,28 +57,40 @@ const rich = (s: string) =>
       <p class="jmap__lede">{journey.intro}</p>
     </div>
 
-    <ol class="jcards" aria-live="polite">
+    <!-- Stop panels: open from the + on each stop (Sobha-style), one at a time -->
+    <div class="jpanels">
       {
         journey.stops.map((s, i) => (
-          <li class="jcard" data-jcard={i}>
-            <p class="label jcard__when">
-              <span class="jcard__n">{pad(i + 1)}</span>
-              <span class="jcard__rule" aria-hidden="true" />
-              <span set:html={rich(s.when)} />
-            </p>
-            <h3 class="jcard__title">{s.title}</h3>
-            <p class="jcard__role">{s.role} · <span set:html={rich(s.place)} /></p>
-            <ul class="jcard__points">{s.points.map((pt) => <li set:html={rich(pt)} />)}</ul>
-            {s.metrics && <ul class="jcard__metrics" aria-label="Results">{s.metrics.map((m) => <li>{m}</li>)}</ul>}
-            {s.links && (
-              <ul class="jcard__links">
-                {s.links.map((l) => <li><a href={l.href} target="_blank" rel="noopener noreferrer">{l.label} ↗</a></li>)}
-              </ul>
-            )}
-          </li>
+          <article class="jcard" data-jcard={i} id={`stop-${s.slug}`} aria-labelledby={`stop-${s.slug}-title`} aria-hidden="true">
+            <header class="jcard__top">
+              <p class="label jcard__n">{pad(i + 1)} / {pad(journey.stops.length)}</p>
+              <button type="button" class="label jcard__close" data-jpanel-close>Close <span aria-hidden="true">✕</span></button>
+            </header>
+            <div class="jcard__body">
+              {s.photo
+                ? <img class="jcard__photo" src={s.photo} alt="" loading="lazy" decoding="async" />
+                : <div class="jcard__photo jcard__photo--empty" aria-hidden="true"><span>{s.title}</span></div>}
+              <p class="label jcard__when"><span set:html={rich(s.when)} /> · <span set:html={rich(s.place)} /></p>
+              <h3 class="jcard__title" id={`stop-${s.slug}-title`}>{s.title}</h3>
+              <p class="jcard__role">{s.role}</p>
+              <div class="jcard__story">{s.points.map((pt) => <p set:html={rich(pt)} />)}</div>
+              {s.metrics && <ul class="jcard__metrics" aria-label="Results">{s.metrics.map((m) => <li>{m}</li>)}</ul>}
+              {s.links && (
+                <ul class="jcard__links">
+                  {s.links.map((l) => <li><a href={l.href} target="_blank" rel="noopener noreferrer">{l.label} ↗</a></li>)}
+                </ul>
+              )}
+            </div>
+            <footer class="jcard__foot">
+              <span class="jcard__cases">
+                {(s.caseStudies ?? []).map((c) => <a href={c.href}>{c.label} case study →</a>)}
+              </span>
+              {i < journey.stops.length - 1 && <button type="button" class="jcard__next" data-jpanel-next>Next stop <span aria-hidden="true">↓</span></button>}
+            </footer>
+          </article>
         ))
       }
-    </ol>
+    </div>
 
     <nav class="jnav" aria-label="Journey stops">
       <ol>
@@ -343,46 +355,57 @@ const rich = (s: string) =>
   @media (min-width: 901px) { .jmap__intro { padding-inline: calc(var(--gutter) + 200px); } }
   .jmap__lede { max-width: 42ch; color: rgba(208, 197, 171, 0.75); font-size: var(--type-small); }
 
-  /* Cards */
-  .jcards {
-    position: absolute;
-    left: var(--gutter);
-    bottom: clamp(88px, 12vh, 110px);
-    width: min(440px, calc(100% - 2 * var(--gutter)));
-    pointer-events: none;
-  }
+  /* Stop panels — fade in on the right when a + is pressed */
+  .jpanels { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
   .jcard {
     position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
+    top: 24px;
+    right: 24px;
+    bottom: 24px;
+    width: min(440px, calc(100% - 48px));
     display: grid;
-    gap: 10px;
-    padding: clamp(18px, 2.2vw, 28px);
-    background: rgba(17, 16, 13, 0.8);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(208, 197, 171, 0.14);
-    border-radius: 4px;
+    grid-template-rows: auto 1fr auto;
+    background: rgba(24, 23, 19, 0.97);
+    border: 1px solid rgba(208, 197, 171, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
     opacity: 0;
     visibility: hidden;
     transform: translateY(12px);
-    transition: opacity 0.6s var(--ease-out), transform 0.7s var(--ease-out), visibility 0s linear 0.7s;
+    transition: opacity 0.4s var(--ease-out), transform 0.5s var(--ease-out), visibility 0s linear 0.5s;
   }
-  .jcard.is-active { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition-delay: 0s; }
-  .jcard__when { display: flex; align-items: center; gap: 12px; color: var(--mist); }
-  .jcard__n { color: var(--fog); }
-  .jcard__rule { width: 28px; height: 1px; background: rgba(208, 197, 171, 0.3); }
-  .jcard__title { margin: 0; font-family: var(--font-display); font-weight: var(--fw-display); font-size: var(--fs-4); line-height: 1; letter-spacing: var(--tracking-display); }
-  .jcard__role { margin: 0; font-size: var(--type-small); color: rgba(208, 197, 171, 0.8); }
-  .jcard__points { display: grid; gap: 6px; font-size: var(--type-small); line-height: 1.5; color: rgba(208, 197, 171, 0.72); }
-  .jcard__points li { position: relative; padding-left: 16px; }
-  .jcard__points li::before { content: ''; position: absolute; left: 0; top: 0.7em; width: 8px; height: 1px; background: var(--mist); }
-  .jcard__metrics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-  .jcard__metrics li { padding: 6px 12px; border-radius: 999px; background: #d0c5ab; color: var(--night); font-size: 12px; font-weight: 500; }
-  .jcard__links { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--type-small); }
+  .jcard.is-open { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition: opacity 0.6s var(--ease-out), transform 0.7s var(--ease-out), visibility 0s; }
+  .jcard__top, .jcard__foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 22px 28px; }
+  .jcard__n { color: var(--mist); }
+  .jcard__close { min-height: 36px; color: var(--fog); }
+  .jcard__close:hover, .jcard__next:hover { color: var(--accent); }
+  .jcard__body { display: grid; align-content: start; gap: 12px; padding: 0 28px 8px; overflow-y: auto; overscroll-behavior: contain; }
+  .jcard__photo { width: 100%; aspect-ratio: 3 / 2; max-height: 28svh; object-fit: cover; border-radius: 4px; margin-bottom: 12px; }
+  .jcard__photo--empty { display: grid; place-items: center; background: radial-gradient(120% 90% at 30% 20%, #26231d, #181713); border: 1px solid rgba(208, 197, 171, 0.08); }
+  .jcard__photo--empty span { font-family: var(--font-display); font-size: clamp(1.4rem, 1rem + 1vw, 2rem); letter-spacing: -0.03em; color: rgba(208, 197, 171, 0.22); text-align: center; padding: 0 24px; }
+  .jcard__when { color: var(--mist); }
+  .jcard__title { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.9rem, 1.2rem + 1.6vw, 2.6rem); line-height: 1.04; letter-spacing: -0.035em; }
+  .jcard__role { margin: 0; color: var(--accent); font-size: var(--type-small); }
+  .jcard__story { display: grid; gap: 10px; margin-top: 4px; font-size: 15px; line-height: 1.6; color: rgba(208, 197, 171, 0.82); }
+  .jcard__story p { margin: 0; }
+  .jcard__metrics { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .jcard__metrics li { padding: 7px 12px; border-radius: 999px; background: rgba(208, 197, 171, 0.1); font-size: 12px; font-weight: 500; }
+  .jcard__links { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 4px 0 0; padding: 0; list-style: none; font-size: var(--type-small); }
   .jcard__links a { border-bottom: 1px solid rgba(208, 197, 171, 0.4); }
-  .jcard__links a:hover { color: var(--accent); border-color: var(--accent); }
+  .jcard__foot { border-top: 1px solid rgba(208, 197, 171, 0.12); margin: 0 28px; padding: 18px 0 22px; }
+  .jcard__cases { display: grid; gap: 6px; font-size: 14px; font-weight: 600; }
+  .jcard__cases a:hover { color: var(--accent); }
+  .jcard__next { font-size: 14px; color: var(--mist); white-space: nowrap; }
+  @media (max-height: 720px) { .jcard__photo { display: none; } }
+  /* while a panel is open: the map dims a touch and the year index steps aside */
+  .jmap:global(.has-panel) .jmap__fog { background: rgba(17, 16, 13, 0.28); }
+  .jmap:global(.has-panel) .jnav { opacity: 0; pointer-events: none; }
+  @media (max-width: 640px) {
+    .jcard { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-height: 78svh; border-radius: 18px 18px 0 0; transform: translateY(40px); }
+    .jcard.is-open { transform: none; }
+    .jcard__top { padding-top: 26px; }
+    .jcard__top::before { content: ''; position: absolute; top: 9px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: rgba(208, 197, 171, 0.3); }
+  }
 
   /* Year index */
   .jnav {
@@ -456,19 +479,29 @@ const rich = (s: string) =>
   }
 
   /* Stop pins (MapLibre markers, injected) */
-  :global(.jstop) { pointer-events: none; }
-  :global(.jstop__dot) { display: block; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid #d0c5ab; background: rgba(17, 16, 13, 0.7); position: relative; }
-  :global(.jstop__dot::before), :global(.jstop__dot::after) { content: ''; position: absolute; left: 50%; top: 50%; background: #d0c5ab; transform: translate(-50%, -50%); }
-  :global(.jstop__dot::before) { width: 6px; height: 1.5px; }
-  :global(.jstop__dot::after) { width: 1.5px; height: 6px; }
+  :global(.jstop) { display: flex; align-items: center; gap: 10px; }
+  :global(.jstop__dot) {
+    display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%;
+    border: 1.2px solid rgba(208, 197, 171, 0.9); background: rgba(17, 16, 13, 0.75); color: #d0c5ab;
+    font: 400 20px/1 var(--font-sans); cursor: pointer; position: relative; transition: background 0.3s, color 0.3s, transform 0.3s;
+  }
+  :global(.jstop__dot:hover) { transform: scale(1.08); }
+  :global(.jstop__dot:focus-visible) { outline: 2px solid #ece4cf; outline-offset: 3px; }
+  :global(.jstop.is-active .jstop__dot) { background: #ece4cf; color: #11100d; border-color: #ece4cf; }
+  :global(.jstop.is-active .jstop__dot::after) {
+    content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 1px solid rgba(236, 228, 207, 0.6);
+    animation: jpulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite; pointer-events: none;
+  }
+  @keyframes jpulse { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+  :global(.jstop.is-open .jstop__dot::after) { animation: none; opacity: 0; }
   :global(.jstop__label) {
-    position: absolute; left: 50%; bottom: 22px; translate: -50% 0;
-    white-space: nowrap; font: 500 11px/1 var(--font-sans); letter-spacing: 0.16em; text-transform: uppercase;
+    display: grid; gap: 2px; pointer-events: none;
+    font: 600 12px/1.2 var(--font-sans); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap;
     color: #d0c5ab; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95); opacity: 0; transition: opacity 0.5s;
   }
+  :global(.jstop__label small) { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; opacity: 0.7; }
   :global(.jstop.is-active .jstop__label) { opacity: 1; }
-  :global(.jstop.is-active .jstop__dot) { background: #d0c5ab; }
-  :global(.jstop.is-active .jstop__dot::before), :global(.jstop.is-active .jstop__dot::after) { background: var(--night); }
+  :global(.jstop.is-open .jstop__label) { opacity: 0; }
 
   .ph { outline: 1px dashed currentColor; outline-offset: 2px; }
 
@@ -476,8 +509,9 @@ const rich = (s: string) =>
   .jmap:global(.is-static) .jmap__stage { overflow: auto; padding: 96px var(--gutter) 48px; }
   .jmap:global(.is-static) :is(.jmap__map, .jmap__fog, .jnav, .jctrl, .jmap__hint) { display: none; }
   .jmap:global(.is-static) .jmap__intro { position: relative; background: none; }
-  .jmap:global(.is-static) .jcards { position: relative; left: 0; bottom: 0; width: auto; display: grid; gap: 16px; max-width: 640px; margin: 32px auto 0; }
-  .jmap:global(.is-static) .jcard { position: relative; opacity: 1; visibility: visible; transform: none; }
+  .jmap:global(.is-static) .jpanels { position: relative; display: grid; gap: 16px; max-width: 640px; margin: 32px auto 0; pointer-events: auto; }
+  .jmap:global(.is-static) .jcard { position: relative; inset: auto; width: auto; opacity: 1; visibility: visible; transform: none; }
+  .jmap:global(.is-static) :is(.jcard__close, .jcard__next) { display: none; }
 
   /* Phones: a compact card, lifted above the floating pill menu */
   @media (max-width: 640px) { .mapcard:global(.is-compact) { bottom: 20px; } }
@@ -489,11 +523,11 @@ const rich = (s: string) =>
   }
   @media (max-width: 900px) {
     .jnav { display: none; }
-    .jcards { bottom: 92px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .mapcard { animation: none; opacity: 1; transform: none; }
     .mapcard__pulse { animation: none; }
+    :global(.jstop.is-active .jstop__dot::after) { animation: none; }
   }
 </style>
 
