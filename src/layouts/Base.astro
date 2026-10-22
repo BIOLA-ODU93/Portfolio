@@ -14,6 +14,7 @@ const description = Astro.props.description ?? site.description;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {site.hideFromSearch && <meta name="robots" content="noindex, nofollow" />}
     <meta name="theme-color" content="#11100d" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />

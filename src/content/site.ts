@@ -4,6 +4,8 @@
  */
 
 export const site = {
+  /** true while the site is in progress: live, but asks search engines not to list it. Set to false at launch. */
+  hideFromSearch: true,
   name: 'Abiola Oduyemi',
   displayName: 'Biola Odu',
   role: 'Product Designer & Graphic Designer',

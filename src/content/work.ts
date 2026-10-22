@@ -168,13 +168,13 @@ export const work = {
     {
       slug: 'ansarr',
       client: 'Ansarr',
-      role: 'Lead designer',
+      role: 'Lead product designer',
       medium: 'Two-sided marketplace',
       year: '2026',
-      title: 'A research marketplace, from waitlist to platform',
-      result: 'Platform live at ansarr.com',
-      image: null,
-      href: null,
+      title: 'A research marketplace where honest answers get paid',
+      result: 'Android live in 3 months · iOS in beta',
+      image: '/images/work/ansarr.webp',
+      href: '/work/ansarr',
     },
   ],
   graphic: [
@@ -299,4 +299,88 @@ export const luciana = {
   ],
   closing: 'The biggest lever in fashion e-commerce isn’t better photography or copy. It’s *closing the gap between imagining a fit and seeing it.*',
   outcome: '[Add a real number: try-on usage, conversion on try-on products, or fewer returns]',
+};
+
+const A = '/images/work/ansarr/';
+export const ansarr = {
+  slug: 'ansarr',
+  kicker: 'Case study · Product design',
+  client: 'Ansarr',
+  title: 'Designing a research marketplace where honest answers get paid',
+  summary:
+    'Ansarr is a two-sided research marketplace, starting in Nigeria. Researchers post studies and pay only for the answers they approve; respondents answer the studies they qualify for and get paid in Naira. I led the design of both sides: two mobile apps, the design system behind them, and the waitlist that launched it.',
+  meta: [
+    { k: 'Project', v: 'ansarr.com', href: 'https://ansarr.com' },
+    { k: 'Industry', v: 'Research · payments' },
+    { k: 'Platform', v: 'Android (live) · iOS (beta)' },
+    { k: 'Role', v: 'Lead product designer' },
+    { k: 'Timeline', v: 'Jun – Sep 2026' },
+    { k: 'Tools', v: 'Figma' },
+  ],
+  glance: [
+    { k: 'The problem', v: 'Researchers struggle to get honest answers, and the people who give them rarely get paid. Each side has a reason not to trust the other.' },
+    { k: 'What I did', v: 'Designed two apps on one design system: Give Ansarr for respondents and Seek Ansarr for researchers, with every money rule visible on screen.' },
+    { k: 'The result', v: 'Android went live in September 2026, three months after design started. iOS is in beta.' },
+  ],
+  problem: {
+    text: 'A marketplace only works if both sides trust it. Researchers need to know the answers are real and the cost won’t change. Respondents need to know their time will be paid and their identity stays private. Every screen that touched money had to make that trust visible.',
+    quote: 'Researchers doubt the answers. Respondents doubt the payout. *The design had to earn trust on both sides.*',
+  },
+  sides: [
+    {
+      id: 'give', name: 'Give Ansarr', who: 'Respondents',
+      line: 'Answer the studies you qualify for and get paid in Naira.',
+      jobs: ['Prove you’re real once, then unlock better-paying studies', 'See what a study pays and how long it takes before starting', 'Cash out every Friday to your own bank account'],
+      screens: [[A + 'welcome.webp', 'Welcome screen: Get paid for your point of view'], [A + 'feed.webp', 'Available studies with reward, fill and tags'], [A + 'wallet.webp', 'Wallet with available, pending and lifetime earnings']],
+    },
+    {
+      id: 'seek', name: 'Seek Ansarr', who: 'Researchers',
+      line: 'Post a study, reach the right people, and pay only for answers you approve.',
+      jobs: ['Price a study before creating it', 'Target respondents by who they are, never by name', 'Fund once, then approve each response'],
+      screens: [[A + 'workspace.webp', 'Researcher workspace: projects, pool and calculator'], [A + 'participant.webp', 'Participants: describe who you need and see how many match'], [A + 'study-live.webp', 'A funded, live study with its cost breakdown']],
+    },
+  ],
+  approach: {
+    title: 'No research budget, so the rules became the brief',
+    text: 'We didn’t run formal user research before launch. Instead, I treated the marketplace’s rules as the brief: wherever money, privacy or approval was involved, the screen had to show the rule before asking for an action.',
+    rules: [
+      { k: 'Full cost up front', v: 'Rewards plus a flat 15% fee, shown before any payment.' },
+      { k: 'Pay for approved answers only', v: 'Each reward is held until the researcher approves that response.' },
+      { k: 'Anonymous by default', v: 'Researchers see anonymous codes and profile tags, never names or contact details.' },
+      { k: 'Paid every Friday', v: 'Respondents withdraw from ₦10,000 to their own Nigerian bank account.' },
+    ],
+  },
+  steps: [
+    { k: 'Fund', title: 'Two checks before going live', v: 'The fund screen shows the whole bill, rewards plus the 15% fee, and asks for two quick checks: open the survey to make sure it works, and add a confirmation code to its last page. Respondents never hit a broken link, and every completion can be confirmed.', image: A + 'fund-study.webp' },
+    { k: 'Live', title: 'Funded, with one next step', v: 'Once paid, the study shows exactly what was funded and offers a single action: review responses. No dashboard to decode.', image: A + 'study-live.webp' },
+    { k: 'Consent', title: 'Everything known before starting', v: 'Respondents only see studies they qualify for. Before starting, they see the reward, the time it takes and the spots left, plus a plain consent note: answers are shared anonymously, and they can stop at any time.', image: A + 'consent.webp' },
+    { k: 'Approve', title: 'Approval you can see', v: 'When a researcher approves a response, the reward moves to the respondent’s wallet and the study turns green. Responses left unreviewed for 5 days are approved automatically, so nobody waits forever.', image: A + 'approved.webp' },
+    { k: 'Cash out', title: 'Money, without the small print', v: 'Available, pending and lifetime earnings sit in one card, and the withdrawal minimum is right under the button, not hidden in a FAQ. Withdrawals go to the respondent’s own bank account.', image: A + 'wallet.webp' },
+  ],
+  verify: {
+    title: 'Trust, earned in levels',
+    text: 'Respondents prove they’re real in small steps. A 15–20 second voice note unlocks higher-paying studies; a government ID unlocks the best-paying ones. Each step says what it unlocks, and that the data stays private, before it asks for anything.',
+    screens: [[A + 'demographics.webp', 'Profile', 'Profile questions match people to studies.'], [A + 'voice-check.webp', 'Voice check', 'Three random words and one question, recorded in 20 seconds.'], [A + 'id-verified.webp', 'ID check', 'The top level: the best-paying studies open up.']],
+  },
+  system: {
+    title: 'One system, two apps, two themes',
+    text: 'Both apps run on one Figma design system: variables for colour, spacing, radius and type, components from buttons to tables, and light and dark themes built on the same tokens. Violet is the brand and every action; green is kept for money earned.',
+  },
+  type: { family: 'Geist', css: "'Geist', system-ui, sans-serif", v: 'One family for everything, from 72px display numbers to 12px labels. Geist’s tabular figures keep Naira amounts aligned in lists and receipts.' },
+  colours: [
+    { name: 'Violet 600', hex: '#6935F0' },
+    { name: 'Violet 50', hex: '#F0EBFE' },
+    { name: 'Earnings', hex: '#168A50' },
+    { name: 'Green 50', hex: '#E7F6EE' },
+    { name: 'Ink', hex: '#0E1116' },
+    { name: 'Mist', hex: '#F6F7F9' },
+  ],
+  timeline: [
+    { when: 'Jun 2026', k: 'Design starts', v: 'A waitlist page with one toggle for each side, Seek Ansarr and Give Ansarr, plus the launch campaign.' },
+    { when: 'Sep 2026', k: 'Android live', v: 'Both apps launch on Android, for respondents and researchers.' },
+    { when: 'Now', k: 'iOS in beta', v: 'The iPhone app is in beta testing. A laptop version for researchers is on the way.' },
+  ],
+  outcome: ['[Studies run]', '[Responses approved]', '[Paid to respondents]'],
+  next: 'Because we launched without formal research, usability testing comes next: new respondents going through verification, where the effort is highest, and first-time researchers funding a study, where the money is.',
+  closing: 'In a marketplace, trust isn’t a feature. *It’s every screen that touches money.*',
 };
