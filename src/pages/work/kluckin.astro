@@ -1,0 +1,216 @@
+---
+/**
+ * Work in progress — Kluckin. Copy and images: src/content/work.ts (`kluckin`).
+ * One idea carries the page: the first idea ("make the book digital") is struck
+ * through as it scrolls in, and the real job lights up word by word.
+ * Screens are captured from the working prototype at 390 × 844.
+ */
+import Base from '../../layouts/Base.astro';
+import ContactSheet from '../../components/ContactSheet.astro';
+import { kluckin as cs } from '../../content/work';
+import { site } from '../../content/site';
+import '../../styles/case-study.css';
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+/** words for the scroll reveal; *starred* runs become accent words */
+const words = (s: string) => {
+  let on = false;
+  return s.split(/\s+/).map((w) => {
+    if (w.startsWith('*')) on = true;
+    const html = `<span class="w${on ? ' w--em' : ''}">${esc(w.replace(/\*/g, ''))}</span>`;
+    if (/\*[.,]?$/.test(w)) on = false;
+    return html;
+  }).join(' ');
+};
+---
+
+<Base title={`${cs.client} — work in progress · ${site.displayName}`} description={cs.summary}>
+  <header class="cs-bar" data-cs-bar>
+    <a class="cs-bar__logo" href="/"><img src="/brand/signature.png" alt={`${site.displayName} — home`} width="115" height="88" /></a>
+    <a class="cs-bar__back label" href="/#product">← All work</a>
+  </header>
+
+  <main id="main" tabindex="-1" class="cs kl" data-cs>
+    <!-- 1 · Opening: title, then the three states of a check-in -->
+    <section class="kl-intro" aria-labelledby="cs-title">
+      <div class="kl-intro__copy">
+        <p class="label cs-kicker"><span class="kl-badge">In progress</span> {cs.kicker}</p>
+        <h1 id="cs-title" class="kl-intro__title">{cs.title}</h1>
+      </div>
+      <div class="kl-intro__phones">
+        {cs.screens.map(([src, k], i) => (
+          <figure class="kl-intro__phone" style={`--k: ${i}`}>
+            <div class="kl-frame"><img src={src} alt={`Kluckin prototype: ${k}`} width="390" height="844" fetchpriority={i === 1 ? 'high' : undefined} /></div>
+          </figure>
+        ))}
+      </div>
+    </section>
+
+    <!-- 2 · At a glance -->
+    <section class="cs-sec cs-glance">
+      <p class="cs-summary" data-reveal>{cs.summary}</p>
+      <dl class="cs-meta" data-reveal>
+        {cs.meta.map((m) => <div><dt class="label">{m.k}</dt><dd>{m.v}</dd></div>)}
+      </dl>
+      <p class="label cs-label">At a glance</p>
+      <div class="cs-cols">{cs.glance.map((g) => <div class="cs-col" data-reveal><h2 class="cs-h3">{g.k}</h2><p>{g.v}</p></div>)}</div>
+    </section>
+
+    <!-- 3 · The reframe: the first idea is struck through, the real job lights up -->
+    <section class="cs-sec kl-reframe">
+      <p class="label cs-label" data-reveal>The idea, and how it changed</p>
+      <p class="kl-first" data-reveal><span class="kl-first__text">{cs.reframe.first}</span></p>
+      <p class="cs-lede" data-reveal>{cs.reframe.flaw}</p>
+      <p class="kl-quote" data-words set:html={words(cs.reframe.real)} />
+    </section>
+
+    <!-- 4 · Three checks, each one a screen -->
+    <section class="cs-sec">
+      <p class="label cs-label" data-reveal>How it works</p>
+      <h2 class="kl-h2" data-reveal>Three checks, one tap</h2>
+      <ol class="kl-checks">
+        {cs.checks.map((c, i) => <li data-reveal style={`--k: ${i}`}><span class="cs-num">0{i + 1}</span><h3 class="cs-h4">{c.k}</h3><p>{c.v}</p></li>)}
+      </ol>
+      <ol class="kl-screens">
+        {cs.screens.map(([src, k, v], i) => (
+          <li data-reveal style={`--k: ${i}`}>
+            <div class="kl-frame"><img src={src} alt={`${k} screen`} loading="lazy" decoding="async" width="390" height="844" /></div>
+            <p class="kl-screens__k">{k}</p>
+            <p class="kl-screens__v">{v}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <!-- 5 · Decisions: before and after, with the reason -->
+    <section class="cs-sec">
+      <p class="label cs-label" data-reveal>Decisions</p>
+      <h2 class="kl-h2" data-reveal>What I changed, removed and added</h2>
+      <p class="cs-lede" data-reveal>The spec is on its fourth version. Each time, I reviewed it against the original problem and wrote down what changed and why.</p>
+      <ul class="kl-decisions">
+        {cs.decisions.map((d) => (
+          <li class="kl-decision" data-reveal>
+            <p class={`kl-tag kl-tag--${d.tag.toLowerCase()}`}>{d.tag}</p>
+            <dl>
+              <div><dt class="label">Before</dt><dd class="kl-before">{d.before}</dd></div>
+              <div><dt class="label">After</dt><dd class="kl-after">{d.after}</dd></div>
+            </dl>
+            <p class="kl-why">{d.why}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- 6 · Honest limits -->
+    <section class="cs-sec">
+      <p class="label cs-label" data-reveal>Being honest about the limits</p>
+      <h2 class="kl-h2" data-reveal>What technology can’t catch, and what covers it</h2>
+      <div class="cs-cols">{cs.limits.map((l) => <div class="cs-col" data-reveal><h3 class="cs-h3">{l.k}</h3><p>{l.v}</p></div>)}</div>
+    </section>
+
+    <!-- 7 · The pilot: targets, not results -->
+    <section class="cs-sec">
+      <p class="label cs-label" data-reveal>What the pilot will measure</p>
+      <h2 class="kl-h2" data-reveal>Two teams, two Sundays, next to the paper book</h2>
+      <p class="cs-lede" data-reveal>These are the targets set in the spec, not results. The pilot will compare the app’s count with an independent headcount by the ushers.</p>
+      <ul class="cs-stats">
+        {cs.pilot.map((s) => <li class="cs-stat kl-target" data-reveal><span class="cs-stat__value">{s.value}<span class="cs-stat__unit">{s.unit}</span></span><span>{s.label}</span></li>)}
+      </ul>
+      <p class="label cs-label kl-next-label" data-reveal>What’s next</p>
+      <p class="cs-lede" data-reveal>{cs.next}</p>
+      <p class="kl-quote kl-quote--close" data-words set:html={words(cs.closing)} />
+    </section>
+
+    <!-- 8 · Next -->
+    <section class="cs-next">
+      <p class="label">Next case study</p>
+      <a class="cs-next__link" href="/work/ansarr">Ansarr <span aria-hidden="true">→</span></a>
+      <div class="kl-next__row">
+        <a class="label kl-next__all" href="/#product">All work</a>
+        <button class="cs-next__talk label" type="button" data-contact-open>Let’s talk</button>
+      </div>
+    </section>
+  </main>
+  <ContactSheet />
+</Base>
+
+<style>
+  .kl { --accent: #8fb8ff; --kl-blue: #2686fc; --kl-ok: #b8f0b8; --kl-warn: #ffdad5; }
+  .kl-h2 { margin: 0; max-width: 22ch; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.8rem, 1rem + 2vw, 3rem); line-height: 1.08; letter-spacing: -0.03em; text-wrap: balance; }
+
+  /* phone frame: screens are 390 wide */
+  .kl-frame { aspect-ratio: 390 / 844; padding: 8px; border-radius: 38px; background: #1b1f27; box-shadow: inset 0 0 0 1px rgba(208, 197, 171, 0.14), 0 40px 80px -30px rgba(0, 0, 0, 0.9); overflow: hidden; }
+  .kl-frame img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 30px; }
+
+  /* 1 · opening */
+  .kl-intro { display: grid; gap: clamp(40px, 6vw, 72px); padding: clamp(120px, 16vw, 180px) var(--pad) clamp(40px, 6vw, 80px); background: radial-gradient(55% 50% at 50% 75%, rgba(38, 134, 252, 0.22), transparent 70%); }
+  .kl-intro__copy { max-width: 100%; }
+  .kl-intro__title { max-width: 20ch; margin: 16px 0 0; font-family: var(--font-display); font-weight: 500; font-size: clamp(2rem, 1rem + 3.2vw, 4.2rem); line-height: 1.04; letter-spacing: -0.035em; text-wrap: balance; }
+  .kl-badge { display: inline-block; margin-right: 8px; padding: 3px 10px; border-radius: 999px; background: rgba(38, 134, 252, 0.18); color: var(--accent); }
+  .kl-intro__phones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 3vw, 40px); max-width: 920px; width: 100%; justify-self: center; align-items: end; }
+  .kl-intro__phone { margin: 0; animation: kl-rise 0.9s var(--ease-out) both; animation-delay: calc(var(--k) * 120ms + 150ms); }
+  .kl-intro__phone:nth-child(2) { translate: 0 calc(-1 * clamp(16px, 4vw, 48px)); }
+  @keyframes kl-rise { from { opacity: 0; transform: translateY(40px); } }
+
+  /* 3 · the reframe: the first idea gets crossed out once it's in view */
+  .kl-first { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.9rem, 1rem + 2.8vw, 3.6rem); line-height: 1.1; letter-spacing: -0.03em; color: var(--dim); }
+  .kl-first__text { position: relative; }
+  .kl-first__text::after { content: ''; position: absolute; left: -2%; right: -2%; top: 54%; height: 0.08em; background: #ff8a7a; border-radius: 99px; transform: scaleX(0); transform-origin: left; transition: transform 0.9s var(--ease-out) 0.5s; }
+  .kl-first.is-in .kl-first__text::after { transform: scaleX(1); }
+  :global(html:not(.js)) .kl-first__text::after { transform: scaleX(1); }
+  .kl-quote { max-width: 24ch; margin: clamp(8px, 2vw, 24px) 0 0; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.9rem, 1rem + 2.8vw, 3.6rem); line-height: 1.1; letter-spacing: -0.03em; }
+  .kl-quote--close { max-width: 26ch; margin-top: clamp(56px, 8vw, 120px); }
+  .kl-quote :global(.w) { opacity: var(--o, 1); transition: opacity 0.25s linear; }
+  .kl-quote :global(.w--em) { color: var(--accent); }
+  :global(html.js) .kl-quote :global(.w) { --o: 0.16; }
+
+  /* 4 · checks and screens */
+  .kl-checks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .kl-checks li { display: grid; gap: 8px; align-content: start; padding: 24px; border-radius: 14px; background: var(--night-2); }
+  .kl-checks p { color: var(--dim); line-height: 1.55; }
+  .kl-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(16px, 3vw, 48px); margin: clamp(24px, 4vw, 48px) 0 0; padding: 0; list-style: none; }
+  .kl-screens li { display: grid; gap: 10px; align-content: start; }
+  .kl-screens .kl-frame { width: min(100%, 260px); }
+  .kl-screens__k { margin: 8px 0 0; font-weight: 500; }
+  .kl-screens__v { margin: 0; color: var(--dim); font-size: var(--type-small); line-height: 1.55; max-width: 32ch; }
+
+  /* 5 · decisions */
+  .kl-decisions { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .kl-decision { display: grid; gap: 16px; align-content: start; padding: 24px; border-radius: 14px; background: var(--night-2); }
+  .kl-decision dl { display: grid; gap: 12px; margin: 0; }
+  .kl-decision dd { margin: 4px 0 0; line-height: 1.5; }
+  .kl-before { color: var(--dim); text-decoration: line-through; text-decoration-color: rgba(255, 138, 122, 0.6); }
+  .kl-after { font-weight: 500; }
+  .kl-why { margin: 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--dim); font-size: var(--type-small); line-height: 1.6; }
+  .kl-tag { justify-self: start; margin: 0; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .kl-tag--changed { background: rgba(38, 134, 252, 0.18); color: var(--accent); }
+  .kl-tag--removed { background: rgba(255, 138, 122, 0.16); color: #ffb3a8; }
+  .kl-tag--added { background: rgba(184, 240, 184, 0.14); color: var(--kl-ok); }
+
+  /* 7 · pilot targets: dashed, because they aren't results yet */
+  .kl-target { background: none; border: 1px dashed rgba(143, 184, 255, 0.5); }
+  .kl-next-label { margin-top: clamp(32px, 4vw, 56px); }
+  .kl-next__row { display: flex; gap: 16px; align-items: center; }
+  .kl-next__all { color: var(--fog); padding: 14px 20px; border: 1px solid rgba(208, 197, 171, 0.3); border-radius: 999px; }
+
+  @media (max-width: 860px) {
+    .kl-checks { grid-template-columns: 1fr; }
+    .kl-frame { padding: 5px; border-radius: 24px; }
+    .kl-frame img { border-radius: 19px; }
+  }
+  @media (max-width: 640px) {
+    .kl-screens { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    .kl-screens .kl-frame { width: min(240px, 70%); }
+    .kl-screens__v { margin-inline: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kl-intro__phone { animation: none; }
+    .kl-first__text::after { transition: none; transform: scaleX(1); }
+    :global(html.js) .kl-quote :global(.w) { --o: 1; }
+  }
+</style>
+
+<script>
+  import { initCaseStudy } from '../../scripts/case-study';
+  initCaseStudy();
+</script>

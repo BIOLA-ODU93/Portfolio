@@ -176,6 +176,17 @@ export const work = {
       image: '/images/work/ansarr.webp',
       href: '/work/ansarr',
     },
+    {
+      slug: 'kluckin',
+      client: 'Kluckin',
+      role: 'Product designer · self-initiated',
+      medium: 'Mobile web app · in progress',
+      year: '2026',
+      title: 'Attendance you can trust, instead of a paper book',
+      result: 'Prototype built · pilot planned',
+      image: '/images/work/kluckin.webp',
+      href: '/work/kluckin',
+    },
   ],
   graphic: [
     {
@@ -383,4 +394,61 @@ export const ansarr = {
   outcome: ['[Studies run]', '[Responses approved]', '[Paid to respondents]'],
   next: 'Because we launched without formal research, usability testing comes next: new respondents going through verification, where the effort is highest, and first-time researchers funding a study, where the money is.',
   closing: 'In a marketplace, trust isn’t a feature. *It’s every screen that touches money.*',
+};
+
+const K = '/images/work/kluckin/';
+export const kluckin = {
+  slug: 'kluckin',
+  kicker: 'Product design · Kluckin',
+  client: 'Kluckin',
+  title: 'Replacing a paper sign-in book with attendance you can trust',
+  summary:
+    'Every week I watched the ushers pass round a paper book for about 300 volunteers to sign. Nobody asked me to change it. I designed Kluckin, a phone check-in that only works on the building’s Wi-Fi and confirms who you are with Face ID or a fingerprint, and built a working prototype of the check-in.',
+  meta: [
+    { k: 'Status', v: 'In progress · pilot planned' },
+    { k: 'Role', v: 'Product designer · self-initiated' },
+    { k: 'Platform', v: 'Mobile web app (installable)' },
+    { k: 'Users', v: 'About 300 volunteers' },
+    { k: 'Tools', v: 'Figma · Next.js prototype' },
+  ],
+  glance: [
+    { k: 'The problem', v: 'Relatives signed in people who weren’t there, nobody recorded arrival times, and the admin had no way to check an entry.' },
+    { k: 'What I did', v: 'Wrote the product spec, mapped the flows, built the design system in Figma, and prototyped the check-in on real phones.' },
+    { k: 'Where it is', v: 'The spec is on its fourth version. A two-department pilot, run alongside the paper book, comes next.' },
+  ],
+  reframe: {
+    first: 'Make the book digital.',
+    flaw: 'A digital book has the same flaw: anyone can still sign for anyone.',
+    real: 'Prove the person is *actually in the room.*',
+  },
+  checks: [
+    { k: 'Presence', v: 'Check-in only works on the building’s Wi-Fi. Browsers can’t read the network name, so the server checks that the phone is using the building’s internet connection.' },
+    { k: 'Identity', v: 'Each account has a passkey: Face ID, a fingerprint or the phone’s PIN. A relative in the room can’t check in someone who isn’t there.' },
+    { k: 'Time', v: 'The arrival time comes from the server, not the phone, so changing the phone’s clock changes nothing.' },
+  ],
+  screens: [
+    [K + 'off-wifi.webp', 'Off the Wi-Fi', 'Check-in is blocked, and the screen says exactly how to fix it.'],
+    [K + 'today.webp', 'Ready to check in', 'One button. The board shows the time now and the on-time cut-off.'],
+    [K + 'checked-in.webp', 'Checked in', 'The arrival time, the status and a confirmation code.'],
+  ],
+  decisions: [
+    { tag: 'Changed', before: 'Check-in opened at 9:00 for the volunteers’ meeting.', after: 'One check-in on arrival, open from 6:00.', why: 'Someone who arrived at 8:45 was turned away and then forgot. Early arrivals, often the most senior people, were the ones being missed.' },
+    { tag: 'Removed', before: 'A weekly roll-call check by every team leader.', after: 'A “Not seen” flag any time, plus surprise spot checks.', why: 'A weekly chore gets skipped, and stops whenever a leader is away. A check nobody can predict still keeps cheating risky.' },
+    { tag: 'Removed', before: 'Six user roles.', after: 'Three roles, plus two add-on permissions.', why: 'Two of the “roles” were jobs given to people, not different kinds of user. Fewer roles means fewer screens and fewer mistakes.' },
+    { tag: 'Changed', before: 'Late “I was here early” claims counted straight away.', after: 'They stay pending until someone confirms them.', why: 'It was a trust gap for the most senior people, who are also the hardest to question.' },
+    { tag: 'Added', before: 'If the internet went down, there was no record at all.', after: 'Outage mode: leaders take a quick roll call instead.', why: 'One bad morning shouldn’t mean a missing Sunday.' },
+    { tag: 'Added', before: 'Volunteers without a smartphone were listed as a risk.', after: 'Their team leader checks them in.', why: 'They’re a real group of people, so they needed a real plan, not a footnote.' },
+  ],
+  limits: [
+    { k: 'Passkeys sync', v: 'A passkey follows the person to their other devices through iCloud or Google, so the account is tied to the person, not one handset. The spec says so plainly.' },
+    { k: 'A lent phone', v: 'Someone could lend their unlocked phone to a relative. Software can’t catch that, so the “Not seen” flag and spot checks are there for it.' },
+    { k: 'Privacy', v: 'No GPS tracking. Only name, phone, team and attendance are stored, and every admin change is logged.' },
+  ],
+  pilot: [
+    { value: '≤2', unit: '%', label: 'Target: largest gap between the app’s count and an usher headcount' },
+    { value: '≥90', unit: '%', label: 'Target: volunteers set up by week 4' },
+    { value: '≤10', unit: 's', label: 'Target: median time to check in' },
+  ],
+  next: 'Before the pilot, I need to check my assumptions with the people the app depends on: the administrator who will own the records, the senior leaders, the team leads, and whoever runs the Wi-Fi, because 300 phones joining at once would overwhelm a home-grade router.',
+  closing: 'The first idea was to digitise the book. *The real job was making every name in it true.*',
 };
