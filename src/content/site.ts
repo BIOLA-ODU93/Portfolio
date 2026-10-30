@@ -62,7 +62,7 @@ export const projects = [
  * Wrap words in *asterisks* for the accent colour. [brackets] = placeholder.
  */
 export const about = {
-  statement: 'Hi, I’m Biola. Nine years in design, from insurance campaigns in Lagos to product teams in Dublin, and *one job the whole way:* making things people understand.',
+  statement: 'Hi, I’m Biola. A product designer since 2022, from fintech in Lagos to product teams in Dublin, with *one job the whole way:* making things people understand.',
   start: {
     label: 'Where it began',
     text: 'I studied mass communication at Babcock University, and one lesson stuck: a message only works if people get it. I started as a designer in 2017, creating campaigns at AIICO Insurance for five years. In 2022 I moved into product design at Sky Capital in Lagos, and grew from designing for one office to leading design across Lagos, Sierra Leone and The Gambia. In 2024 I came to Dublin for an MSc in Interactive Digital Media.',
@@ -85,7 +85,7 @@ export const about = {
     { value: '40%', label: 'fewer support tickets', where: 'Sky Capital · fintech' },
     { value: '50%', label: 'higher user retention', where: 'Sky Capital · fintech' },
     { value: '4', label: 'countries designed for', where: 'Nigeria · Sierra Leone · The Gambia · Ireland' },
-    { value: '9+', label: 'years in design', where: 'Brand, graphic & product' },
+    { value: '4+', label: 'years in product design', where: 'Since 2022 · fintech, marketplaces & consumer apps' },
   ],
   best: {
     label: 'How I work',
