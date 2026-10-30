@@ -132,6 +132,18 @@ export const work = {
   intro: 'Product design and graphic design, side by side. Pick a track: each has its own link, so you can go straight to the work you’re hiring for.',
   product: [
     {
+      slug: 'ansarr',
+      client: 'Ansarr',
+      role: 'Lead product designer',
+      medium: 'Two-sided marketplace',
+      year: '2026',
+      title: 'A research marketplace where honest answers get paid',
+      result: 'Android live in 3 months · iOS in beta',
+      image: '/images/work/ansarr/reel-poster.webp',
+      video: '/images/work/ansarr/reel.mp4', // both apps' real screens gliding past; rendered as a seamless 16 s loop
+      href: '/work/ansarr',
+    },
+    {
       slug: 'praisetival',
       client: 'Praisetival Ireland',
       role: 'Sole product designer',
@@ -153,17 +165,6 @@ export const work = {
       result: 'Live at shop-luciana.co',
       image: '/images/work/luciana.webp',
       href: '/work/luciana',
-    },
-    {
-      slug: 'ansarr',
-      client: 'Ansarr',
-      role: 'Lead product designer',
-      medium: 'Two-sided marketplace',
-      year: '2026',
-      title: 'A research marketplace where honest answers get paid',
-      result: 'Android live in 3 months · iOS in beta',
-      image: '/images/work/ansarr.webp',
-      href: '/work/ansarr',
     },
     {
       slug: 'kluckin',
