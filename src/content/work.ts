@@ -144,17 +144,6 @@ export const work = {
       href: '/work/praisetival',
     },
     {
-      slug: 'sky-capital',
-      client: 'Sky Capital & Allied Financial Services',
-      role: 'Product designer',
-      medium: 'Fintech · web & mobile',
-      year: '2022 – 2024',
-      title: 'Clearer money flows across three countries',
-      result: '40% fewer support tickets · 50% higher retention',
-      image: null,
-      href: null,
-    },
-    {
       slug: 'luciana',
       client: 'Luciana',
       role: 'Product designer · UI/UX',
@@ -427,9 +416,10 @@ export const kluckin = {
     { k: 'Time', v: 'The arrival time comes from the server, not the phone, so changing the phone’s clock changes nothing.' },
   ],
   screens: [
-    [K + 'off-wifi.webp', 'Off the Wi-Fi', 'Check-in is blocked, and the screen says exactly how to fix it.'],
-    [K + 'today.webp', 'Ready to check in', 'One button. The board shows the time now and the on-time cut-off.'],
-    [K + 'checked-in.webp', 'Checked in', 'The arrival time, the status and a confirmation code.'],
+    // time, wifi and bar match each screenshot (status-bar clock, connection, tab-bar colour) for the phone mockups
+    { src: K + 'off-wifi.webp', k: 'Off the Wi-Fi', v: 'Check-in is blocked, and the screen says exactly how to fix it.', time: '9:43', wifi: false, bar: '#f0edf1' },
+    { src: K + 'today.webp', k: 'Ready to check in', v: 'One button. The board shows the time now and the on-time cut-off.', time: '9:43', wifi: true, bar: '#f0edf1' },
+    { src: K + 'checked-in.webp', k: 'Checked in', v: 'The arrival time, the status and a confirmation code.', time: '9:43', wifi: true, bar: '#fafafe' },
   ],
   decisions: [
     { tag: 'Changed', before: 'Check-in opened at 9:00 for the volunteers’ meeting.', after: 'One check-in on arrival, open from 6:00.', why: 'Someone who arrived at 8:45 was turned away and then forgot. Early arrivals, often the most senior people, were the ones being missed.' },
