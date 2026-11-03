@@ -1,37 +1,56 @@
 ---
 /**
- * A tidy phone mockup for 390-wide app screenshots: bezel, status bar with a Dynamic Island,
- * the screen at its true proportions (never cropped), and a home-indicator strip.
+ * A tidy phone mockup for 390-wide app screenshots: bezel, Dynamic Island, the screen at its true
+ * width (never cropped at the sides), and a home-indicator strip.
  * Everything is sized in container units, so it scales cleanly at any width.
+ *
+ * - statusBar: draws a status bar above the screenshot. Turn it off for screenshots that already
+ *   include one (the island then floats over the screenshot's own status bar).
+ * - home: adds a home-indicator strip below the screenshot. Turn it off for full-device frames
+ *   (e.g. Figma iPhone frames) that already leave room for it.
+ * - ratio: visible screen height ÷ width. Default is a phone (844/390); taller screenshots are shown
+ *   from the top, like a scrollable page. Pass the screenshot's own ratio to show all of it.
+ * - default slot: custom screen content instead of `src` (e.g. a before/after comparison).
  */
 interface Props {
-  src: string;
-  alt: string;
+  src?: string;
+  alt?: string;
+  statusBar?: boolean;
   time?: string;       // status-bar time, to match the screen's own clock
   wifi?: boolean;      // false = on mobile data (no Wi-Fi icon)
-  top?: string;        // colour behind the status bar (the screen's background)
+  top?: string;        // the screen's background (status bar, and behind short screenshots)
   bottom?: string;     // colour of the home-indicator strip (the screen's tab bar)
+  dark?: boolean;      // dark screen: light home indicator
+  home?: boolean;
+  ratio?: number;
   eager?: boolean;
 }
-const { src, alt, time = '9:41', wifi = true, top = '#fafafe', bottom = top, eager = false } = Astro.props;
+const { src, alt = '', statusBar = true, time = '9:41', wifi = true, top = '#fafafe', bottom = top, dark = false, home = true, ratio = 844 / 390, eager = false } = Astro.props;
 ---
 
-<div class="phone" style={`--top: ${top}; --bottom: ${bottom}`}>
+<div class:list={['phone', { 'phone--dark': dark }]} style={`--top: ${top}; --bottom: ${bottom}; --ratio: ${ratio}`}>
   <div class="phone__body">
   <div class="phone__screen">
-    <div class="phone__status" aria-hidden="true">
-      <span class="phone__time">{time}</span>
-      <span class="phone__island"></span>
-      <span class="phone__icons">
-        <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="0.8" /><rect x="5" y="5.5" width="3" height="6.5" rx="0.8" /><rect x="10" y="3" width="3" height="9" rx="0.8" /><rect x="15" y="0" width="3" height="12" rx="0.8" /></svg>
-        {wifi
-          ? <svg viewBox="0 0 16 12"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0zM3.5 6.9a6.4 6.4 0 0 1 9 0l-1.4 1.4a4.4 4.4 0 0 0-6.2 0zM1.3 4.6a9.6 9.6 0 0 1 13.4 0l-1.4 1.4a7.6 7.6 0 0 0-10.6 0z" /></svg>
-          : <span class="phone__net">5G</span>}
-        <svg viewBox="0 0 27 12"><rect x="0.5" y="0.5" width="23" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-opacity="0.4" /><rect x="2.5" y="2.5" width="16" height="7" rx="1.6" /><path d="M25 4v4a2 2 0 0 0 0-4z" fill-opacity="0.45" /></svg>
-      </span>
+    {statusBar && (
+      <div class="phone__status" aria-hidden="true">
+        <span class="phone__time">{time}</span>
+        <span class="phone__island"></span>
+        <span class="phone__icons">
+          <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="0.8" /><rect x="5" y="5.5" width="3" height="6.5" rx="0.8" /><rect x="10" y="3" width="3" height="9" rx="0.8" /><rect x="15" y="0" width="3" height="12" rx="0.8" /></svg>
+          {wifi
+            ? <svg viewBox="0 0 16 12"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0zM3.5 6.9a6.4 6.4 0 0 1 9 0l-1.4 1.4a4.4 4.4 0 0 0-6.2 0zM1.3 4.6a9.6 9.6 0 0 1 13.4 0l-1.4 1.4a7.6 7.6 0 0 0-10.6 0z" /></svg>
+            : <span class="phone__net">5G</span>}
+          <svg viewBox="0 0 27 12"><rect x="0.5" y="0.5" width="23" height="11" rx="3.2" fill="none" stroke="currentColor" stroke-opacity="0.4" /><rect x="2.5" y="2.5" width="16" height="7" rx="1.6" /><path d="M25 4v4a2 2 0 0 0 0-4z" fill-opacity="0.45" /></svg>
+        </span>
+      </div>
+    )}
+    <div class="phone__view">
+      {Astro.slots.has('default')
+        ? <slot />
+        : <img src={src} alt={alt} width="390" height="844" loading={eager ? 'eager' : 'lazy'} decoding="async" fetchpriority={eager ? 'high' : undefined} />}
+      {!statusBar && <span class="phone__island phone__island--over" aria-hidden="true"></span>}
     </div>
-    <img src={src} alt={alt} width="390" height="844" loading={eager ? 'eager' : 'lazy'} decoding="async" fetchpriority={eager ? 'high' : undefined} />
-    <div class="phone__home" aria-hidden="true"><span></span></div>
+    {home && <div class="phone__home" aria-hidden="true"><span></span></div>}
   </div>
   </div>
 </div>
@@ -48,11 +67,15 @@ const { src, alt, time = '9:41', wifi = true, top = '#fafafe', bottom = top, eag
   .phone__screen { display: flex; flex-direction: column; overflow: hidden; border-radius: 10.8cqw; background: var(--top); }
   .phone__status { position: relative; display: flex; align-items: center; justify-content: space-between; height: 12.5cqw; padding: 0 7.5cqw 0 9.5cqw; background: var(--top); color: #101114; font: 600 4.1cqw/1 -apple-system, 'SF Pro Text', 'Inter', system-ui, sans-serif; letter-spacing: -0.01em; }
   .phone__island { position: absolute; left: 50%; top: 2.6cqw; width: 30cqw; height: 8.4cqw; translate: -50% 0; border-radius: 99px; background: #050506; }
+  .phone__island--over { top: 2.3cqw; z-index: 1; }
   .phone__icons { display: flex; align-items: center; gap: 1.5cqw; }
   .phone__icons svg { height: 3cqw; width: auto; fill: currentColor; }
   .phone__icons svg:last-child { height: 3.1cqw; }
   .phone__net { font-size: 3.3cqw; font-weight: 600; }
-  .phone img { display: block; width: 100%; height: auto; }
+  /* the visible screen: full width always; taller screenshots show from the top, shorter ones sit on the screen colour */
+  .phone__view { position: relative; aspect-ratio: 1 / var(--ratio); overflow: hidden; background: var(--top); }
+  .phone__view > img { display: block; width: 100%; height: auto; }
   .phone__home { display: grid; place-items: center; height: 6.5cqw; background: var(--bottom); }
   .phone__home span { width: 34cqw; height: 1.35cqw; border-radius: 99px; background: #101114; opacity: 0.85; }
+  .phone--dark .phone__home span { background: #f2f2f5; opacity: 0.7; }
 </style>
