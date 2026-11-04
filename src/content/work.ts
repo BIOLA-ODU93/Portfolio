@@ -160,7 +160,7 @@ export const work = {
       client: 'Luciana',
       role: 'Product designer · UI/UX',
       medium: 'Fashion e-commerce · AI try-on',
-      year: '[Year]',
+      year: '2026',
       title: 'Premium fashion, tried on before it’s bought',
       result: 'Live at shop-luciana.co',
       image: '/images/work/luciana.webp',
@@ -266,11 +266,22 @@ export const luciana = {
   ],
   research: {
     title: 'What the industry data says',
-    note: 'Desk research that framed the problem. [Add the source for each figure.]',
+    note: 'Industry figures, not our own research. They pointed at the real problem: fit, not taste, is what sends fashion back.',
     stats: [
-      { value: 86, label: 'Fashion carts are abandoned 78–86% of the time, one of the highest rates of any e-commerce category.', source: '[Source]' },
-      { value: 81, label: 'Shoppers feel more confident buying, even high-value items, when sizing and fit doubts are resolved.', source: '[Source]' },
-      { value: 30, label: 'Physical retail converts at 23–30%, where shoppers can try before they buy. Fashion e-commerce sits at 1–2%.', source: '[Source]' },
+      { value: 70.22, label: 'The average share of online shopping carts that are abandoned, across 50 published studies (all e-commerce, not just fashion).', source: 'Baymard Institute', href: 'https://baymard.com/lists/cart-abandonment-rate' },
+      { value: 53, label: 'Of US clothing brands and retailers name size and fit as the top reason for online returns.', source: 'Coresight Research with 3DLOOK, a fit-tech company · 2023 survey of 100 decision-makers', href: 'https://3dlook.ai/content-hub/the-true-cost-of-apparel-returns/' },
+      { value: 24.4, label: 'The average return rate for online clothing orders, in the 12 months to March 2023.', source: 'Coresight Research with 3DLOOK · same study', href: 'https://3dlook.ai/content-hub/the-true-cost-of-apparel-returns/' },
+    ],
+  },
+  // benchmarking: what came from luxury houses (dior.com, gucci.com) and what was left behind on purpose
+  luxury: {
+    title: 'What I took from luxury houses, and what I left behind',
+    text: 'There was no sitemap or formal research phase. I studied how Dior and Gucci sell online, kept the conventions that make a shop feel like a fashion house, and broke one on purpose where it stopped serving Luciana’s shoppers.',
+    rows: [
+      { tag: 'Took', k: 'Story before the catalogue', them: 'Dior’s women’s page opens on its season campaign, and campaign tiles sit inside the dress grid itself.', us: 'Discover leads with the collection’s mood and full looks before any product list.' },
+      { tag: 'Took', k: 'The photo is the page', them: 'Dior’s product page is a full-height image, the name, and a sticky Add to cart with the price. Nothing competes with the garment.', us: 'Product pages open on a full-height image of the piece.' },
+      { tag: 'Took', k: 'A service, not just a shop', them: 'Both offer Book an appointment, and Gucci adds Client Advisors by phone.', us: 'An in-store appointment, “a tailor-made visit”, sits in the top bar.' },
+      { tag: 'Left behind', k: 'Fit help behind a link', them: 'Both answer “will it fit?” with a small Size Guide link and a person you phone or visit. That works when there’s a boutique nearby.', us: 'Luciana ships to West Africa, the UK and North America, so most shoppers can’t drop in. Try It On sits right under the product image instead.' },
     ],
   },
   flow: {

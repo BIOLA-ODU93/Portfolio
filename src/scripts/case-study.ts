@@ -208,17 +208,17 @@ export function initCaseStudy() {
   const list = root.querySelector<HTMLElement>('[data-count-up]');
   if (list && !reduce) {
     const nums = Array.from(list.querySelectorAll<HTMLElement>('[data-count]'))
-      .map((el) => ({ el, n: Number(el.dataset.count) }))
+      .map((el) => ({ el, n: Number(el.dataset.count), d: (el.dataset.count!.split('.')[1] ?? '').length }))
       .filter((x) => Number.isFinite(x.n));
     nums.forEach((x) => (x.el.textContent = '0'));
     new IntersectionObserver((entries, o) => {
       if (!entries[0].isIntersecting) return;
       o.disconnect();
-      nums.forEach(({ el, n }, i) => {
+      nums.forEach(({ el, n, d }, i) => {
         const start = performance.now() + i * 160, dur = 1300;
         const tick = (now: number) => {
           const t = clamp((now - start) / dur);
-          el.textContent = String(Math.round(n * (1 - Math.pow(1 - t, 3))));
+          el.textContent = (n * (1 - Math.pow(1 - t, 3))).toFixed(d); // keeps decimals, e.g. 70.22
           if (t < 1) requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);

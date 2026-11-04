@@ -4,7 +4,8 @@
  * Interactions: the wordmark parts as the monitor rises (opening), a quote that
  * lights word by word, research rings that count up, a user flow that draws its
  * try-on path, a pinned Discover → Consider → Visualize scene ending in the live
- * site's try-on panel (rebuilt), and a type tester with copyable colours.
+ * site's try-on panel (rebuilt), a took / left-behind benchmark against Dior and Gucci,
+ * and a compact type and colour summary with copyable colours.
  */
 import Base from '../../layouts/Base.astro';
 import ContactSheet from '../../components/ContactSheet.astro';
@@ -113,7 +114,7 @@ const travel = `${curve('home', 'shop')} ${curve('shop', 'tryon').replace(/^M[\d
     <section class="cs-sec">
       <p class="label cs-label" data-reveal>Research</p>
       <h2 class="cs-h2" data-reveal>{cs.research.title}</h2>
-      <p class="cs-lede" data-reveal set:html={ph(cs.research.note)} />
+      <p class="cs-lede" data-reveal>{cs.research.note}</p>
       <ul class="lu-rings" data-count-up>
         {cs.research.stats.map((s) => (
           <li class="lu-ring" data-reveal style={`--v: ${s.value}`}>
@@ -121,12 +122,33 @@ const travel = `${curve('home', 'shop')} ${curve('shop', 'tryon').replace(/^M[\d
               <circle cx="64" cy="64" r={R} class="lu-ring__track" />
               <circle cx="64" cy="64" r={R} class="lu-ring__bar" style={`stroke-dasharray: ${C}; --c: ${C}`} />
             </svg>
-            <span class="lu-ring__value"><span data-count={s.value}>{s.value}</span>%</span>
+            <span class:list={['lu-ring__value', String(s.value).length > 3 && 'lu-ring__value--long']}><span data-count={s.value}>{s.value}</span>%</span>
             <p>{s.label}</p>
-            <p class="lu-ring__src" set:html={ph(s.source)} />
+            <p class="lu-ring__src"><a href={s.href} target="_blank" rel="noopener">{s.source} ↗</a></p>
           </li>
         ))}
       </ul>
+    </section>
+
+    <!-- 6b · Benchmark: what came from Dior and Gucci, and what didn't -->
+    <section class="cs-sec">
+      <p class="label cs-label" data-reveal>Benchmark</p>
+      <h2 class="cs-h2" data-reveal>{cs.luxury.title}</h2>
+      <p class="cs-lede" data-reveal>{cs.luxury.text}</p>
+      <div class="lu-bench" role="table" aria-label="What I took from Dior and Gucci, and what I left behind">
+        <div class="lu-bench__row lu-bench__head" role="row">
+          <span role="columnheader"><span class="visually-hidden">Pattern</span></span>
+          <span class="label" role="columnheader">Dior &amp; Gucci</span>
+          <span class="label" role="columnheader">On Luciana</span>
+        </div>
+        {cs.luxury.rows.map((r) => (
+          <div class:list={['lu-bench__row', r.tag !== 'Took' && 'lu-bench__row--break']} role="row" data-reveal>
+            <div role="rowheader"><span class="lu-bench__tag label">{r.tag}</span><h3 class="cs-h4">{r.k}</h3></div>
+            <p role="cell"><span class="lu-bench__mob label">Dior &amp; Gucci</span>{r.them}</p>
+            <p role="cell"><span class="lu-bench__mob label">On Luciana</span>{r.us}</p>
+          </div>
+        ))}
+      </div>
     </section>
 
     <!-- 7 · User flow, drawn live -->
@@ -222,13 +244,7 @@ const travel = `${curve('home', 'shop')} ${curve('shop', 'tryon').replace(/^M[\d
               <p class="label">{t.role}</p>
               <p class="lu-spec__name">{t.family}</p>
             </div>
-            <p class="lu-spec__aa" data-spec-sample>Aa</p>
             <p class="lu-spec__line" data-spec-sample>Own your light.</p>
-            <div class="lu-spec__weights" role="group" aria-label={`${t.family} weight`}>
-              {[['Light', 300], ['Regular', 400], ['Medium', 500], ['SemiBold', 600], ['Bold', 700]].map(([n, w]) => (
-                <button type="button" data-weight={w} aria-pressed={w === 400 ? 'true' : 'false'}>{n}</button>
-              ))}
-            </div>
             <p class="lu-spec__note">{t.v}</p>
           </div>
         ))}
@@ -321,8 +337,26 @@ const travel = `${curve('home', 'shop')} ${curve('shop', 'tryon').replace(/^M[\d
   .lu-ring__bar { stroke: var(--accent); stroke-linecap: round; stroke-dashoffset: var(--c); transition: stroke-dashoffset 1.8s var(--ease-out) 0.2s; }
   .lu-ring:global(.is-in) .lu-ring__bar { stroke-dashoffset: calc(var(--c) * (1 - var(--v) / 100)); }
   .lu-ring__value { position: absolute; top: clamp(52px, 5.2vw, 70px); font-family: 'Spectral', Georgia, serif; font-size: clamp(2rem, 1.2rem + 1.8vw, 3rem); line-height: 1; }
+  .lu-ring__value--long { font-size: clamp(1.6rem, 1rem + 1.3vw, 2.3rem); top: clamp(58px, 5.6vw, 76px); }
   .lu-ring p { max-width: 30ch; color: var(--dim); line-height: 1.55; }
   .lu-ring__src { font-size: var(--type-small); }
+  .lu-ring__src a { color: var(--fog); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(208, 197, 171, 0.35); }
+
+  /* benchmark: took / left behind */
+  .lu-bench { display: grid; margin-top: 8px; border-top: 1px solid rgba(227, 189, 152, 0.4); }
+  .lu-bench__row { display: grid; grid-template-columns: 0.8fr 1fr 1fr; gap: clamp(16px, 3vw, 40px); padding: clamp(18px, 2vw, 26px) 0; border-bottom: 1px solid rgba(208, 197, 171, 0.14); }
+  .lu-bench__head { padding: 14px 0; color: var(--dim); }
+  .lu-bench__row p { margin: 0; color: var(--dim); line-height: 1.6; }
+  .lu-bench__row > div { display: grid; gap: 8px; align-content: start; }
+  .lu-bench__tag { justify-self: start; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(227, 189, 152, 0.5); color: var(--accent); }
+  .lu-bench__row--break .lu-bench__tag { border-color: var(--hot); background: var(--hot); color: #fff; }
+  .lu-bench__row--break p:last-child { color: var(--fog); }
+  .lu-bench__mob { display: none; }
+  @media (max-width: 760px) {
+    .lu-bench__head { display: none; }
+    .lu-bench__row { grid-template-columns: 1fr; gap: 10px; }
+    .lu-bench__mob { display: block; margin-bottom: 4px; color: var(--fog); }
+  }
   @media (max-width: 860px) { .lu-rings { grid-template-columns: 1fr; } }
 
   /* user flow: grey branches draw first, then the try-on path in orange; a dot travels it */
@@ -381,16 +415,12 @@ const travel = `${curve('home', 'shop')} ${curve('shop', 'tryon').replace(/^M[\d
   .lu-spec { --w: 400; display: grid; gap: 14px; align-content: start; padding: clamp(20px, 2.6vw, 32px); border-radius: 16px; background: var(--night-2); }
   .lu-spec__head { display: flex; justify-content: space-between; align-items: baseline; }
   .lu-spec__name { margin: 0; font-family: var(--ff); font-size: var(--fs-1); }
-  .lu-spec__aa { margin: 0; font-family: var(--ff); font-weight: var(--w); font-size: clamp(5rem, 3rem + 6vw, 9rem); line-height: 1; transition: font-weight 0.3s; }
   .lu-spec__line { margin: 0; font-family: var(--ff); font-weight: var(--w); font-size: var(--fs-3); }
-  .lu-spec__weights { display: flex; flex-wrap: wrap; gap: 6px; }
-  .lu-spec__weights button { padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(208, 197, 171, 0.2); font-size: 12px; color: var(--dim); transition: background 0.3s, color 0.3s; }
-  .lu-spec__weights button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--night); }
   .lu-spec__note { color: var(--dim); line-height: 1.6; font-size: var(--type-small); }
   @media (max-width: 860px) { .lu-type { grid-template-columns: 1fr; } }
   .lu-swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 8px 0 0; padding: 0; list-style: none; }
   .lu-swatch { display: grid; gap: 6px; width: 100%; text-align: left; }
-  .lu-swatch__chip { aspect-ratio: 1.4; border-radius: 12px; background: var(--sw); outline: 1px solid rgba(208, 197, 171, 0.12); transition: translate 0.4s var(--ease-out); }
+  .lu-swatch__chip { aspect-ratio: 2.6; border-radius: 12px; background: var(--sw); outline: 1px solid rgba(208, 197, 171, 0.12); transition: translate 0.4s var(--ease-out); }
   .lu-swatch:hover .lu-swatch__chip { translate: 0 -4px; }
   .lu-swatch__name { font-weight: 500; }
   .lu-swatch__hex { color: var(--dim); font-size: var(--type-small); font-variant-numeric: tabular-nums; }
