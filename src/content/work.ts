@@ -51,7 +51,15 @@ export const praisetival = {
       { k: 'Structure the journey', v: 'Mapped every page around one primary action: Get tickets.' },
       { k: 'Design & hand off', v: 'Straight to high fidelity for desktop and mobile, then specs for build.' },
     ],
-    sitemap: { root: 'Home', pages: ['About Us', 'Our Impact', 'Give', 'Contact Us'], action: 'Get tickets → Eventbrite' },
+    sitemap: { root: 'Home', pages: ['About Us', 'Our Impact', 'Partner With Us', 'Contact Us'], action: 'Get tickets → Eventbrite' },
+    // Biola's paper sketches of the structure, redrawn after launch (the original two weeks went straight to high fidelity)
+    sketches: {
+      note: 'The structure, sketched on paper. Redrawn after launch: the two weeks went straight to high fidelity.',
+      items: [
+        { src: '/images/work/praisetival/sketch-pages.webp', w: 1180, h: 820, cap: 'The four pages under Home, and what each one holds', alt: 'Pen sketch of four pages: About Us (about, vision and mission, those who shaped it), Our Impact (past ministers, fuel the praise), Partner With Us (give, ways to give) and Contact Us (become a volunteer).' },
+        { src: '/images/work/praisetival/sketch-hero.webp', w: 930, h: 735, cap: 'The hero: display copy and sub-heading over video, tickets top right, the next events bottom right', alt: 'Pen sketch titled Site Structure, the hero section: a large frame with display copy and a sub-heading at bottom left, a button at top right and stacked cards at bottom right.' },
+      ],
+    },
   },
   decisions: [
     {

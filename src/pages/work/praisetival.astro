@@ -107,6 +107,15 @@ const ph = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace
           <li data-reveal><span class="cs-num">0{i + 1}</span><h3 class="cs-h4">{s.k}</h3><p>{s.v}</p></li>
         ))}
       </ol>
+      <div class="pv-sketches">
+        {cs.process.sketches.items.map((k) => (
+          <figure class="pv-sketch" data-reveal>
+            <img src={k.src} alt={k.alt} width={k.w} height={k.h} loading="lazy" decoding="async" />
+            <figcaption>{k.cap}</figcaption>
+          </figure>
+        ))}
+        <p class="pv-sketches__note label">{cs.process.sketches.note}</p>
+      </div>
       <figure class="cs-map" data-reveal data-map>
         <figcaption class="label">Site map</figcaption>
         <div class="cs-map__root"><span class="cs-node">{cs.process.sitemap.root}</span></div>
@@ -315,6 +324,14 @@ const ph = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace
     .cs-intro__screen { position: relative; left: auto; translate: none; width: min(1100px, 88vw); height: auto; margin: 0 auto; aspect-ratio: 1440 / 855; border-radius: 18px; }
     .cs-intro__hint, .cs-intro__tag { display: none; }
   }
+  /* paper sketches of the structure */
+  .pv-sketches { display: grid; grid-template-columns: 1.2fr 1fr; gap: clamp(16px, 2vw, 28px); align-items: start; margin-top: 8px; }
+  .pv-sketch { display: grid; gap: 10px; margin: 0; }
+  .pv-sketch img { display: block; width: 100%; height: auto; border-radius: 12px; rotate: -0.6deg; box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.7); }
+  .pv-sketch:nth-child(2) img { rotate: 0.8deg; }
+  .pv-sketch figcaption { color: var(--dim); font-size: var(--type-small); line-height: 1.5; }
+  .pv-sketches__note { grid-column: 1 / -1; color: var(--fog); }
+  @media (max-width: 760px) { .pv-sketches { grid-template-columns: 1fr; } }
 </style>
 
 <script>
